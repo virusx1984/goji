@@ -45,10 +45,10 @@ def seed_data_command():
     db.session.add_all([admin_role, planner_role, viewer_role])
     db.session.commit()
 
-    # Create permissions
+    # --- UPDATED PERMISSIONS ---
     permissions_data = [
-        {'name': 'admin:all', 'description': 'Super administrator permission'},
-        {'name': 'user:manage', 'description': 'Manage users and roles'},
+        {'name': 'admin:all', 'description': 'Super administrator permission (grant all access)'},
+        {'name': 'user:manage', 'description': 'Manage users, roles, and permissions'},
         {'name': 'plan:view', 'description': 'View capacity plan'},
         {'name': 'plan:edit', 'description': 'Edit capacity plan'},
         {'name': 'routing:view', 'description': 'View routings'},
@@ -60,13 +60,17 @@ def seed_data_command():
 
     # Assign permissions to roles
     perm_map = {p.name: p for p in Permission.query.all()}
-    admin_role.permissions.append(perm_map['admin:all'])
-    admin_role.permissions.append(perm_map['user:manage']) # Admin should also have user manage
     
+    # Administrator gets all key management permissions
+    admin_role.permissions.append(perm_map['admin:all'])
+    admin_role.permissions.append(perm_map['user:manage'])
+    
+    # Planner gets planning and viewing permissions
     planner_role.permissions.append(perm_map['plan:view'])
     planner_role.permissions.append(perm_map['plan:edit'])
     planner_role.permissions.append(perm_map['routing:view'])
     
+    # Viewer gets read-only permissions
     viewer_role.permissions.append(perm_map['plan:view'])
     viewer_role.permissions.append(perm_map['routing:view'])
 
