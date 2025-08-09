@@ -81,7 +81,6 @@ class SupplierLocation(ModelBase):
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-
 # =============================================
 # Item & Resource Domain
 # =============================================
@@ -141,12 +140,12 @@ class Operation(ModelBase):
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-class Equipment(ModelBase):
+class Asset(ModelBase):
     """
-    Master data for physical equipment assets.
+    Master data for physical assets (equipment, tools, etc.).
     """
-    __tablename__ = 'gj_equipments' # Manually set plural for 'equipment'
     id = db.Column(db.Integer, primary_key=True)
+    asset_group_id = db.Column(db.Integer, db.ForeignKey('gj_asset_groups.id'), nullable=True)
     asset_tag = db.Column(db.String(100), nullable=False, unique=True)
     serial_num = db.Column(db.String(100), unique=True)
     model_num = db.Column(db.String(100))
@@ -154,7 +153,7 @@ class Equipment(ModelBase):
     mfg_id = db.Column(db.Integer, db.ForeignKey('gj_suppliers.id'))
     purchase_date = db.Column(db.Date)
     install_date = db.Column(db.Date)
-    equipment_status = db.Column(db.String(50), nullable=False, default='Active')
+    asset_status = db.Column(db.String(50), nullable=False, default='Active')
 
     # Audit Fields
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
@@ -162,9 +161,9 @@ class Equipment(ModelBase):
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-class EquipmentGroup(ModelBase):
+class AssetGroup(ModelBase):
     """
-    A logical grouping of equipment (e.g., a production line).
+    A logical grouping of assets (e.g., a production line).
     """
     id = db.Column(db.Integer, primary_key=True)
     plant_id = db.Column(db.Integer, db.ForeignKey('gj_plants.id'), nullable=False)
@@ -194,3 +193,12 @@ class WorkCenter(ModelBase):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
+
+# --- Association Table for Work Centers and Assets ---
+work_center_assets = db.Table('gj_work_center_assets',
+    db.Column('id', db.Integer, primary_key=True),
+    db.Column('wc_id', db.Integer, db.ForeignKey('gj_work_centers.id'), nullable=False),
+    db.Column('asset_id', db.Integer, db.ForeignKey('gj_assets.id'), nullable=False),
+    db.Column('created_at', db.DateTime, default=datetime.utcnow, nullable=False),
+    db.Column('created_by_id', db.Integer, db.ForeignKey('gj_users.id'))
+)
