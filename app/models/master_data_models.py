@@ -81,6 +81,9 @@ class SupplierLocation(ModelBase):
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
+    # Relationship to the materials this location can supply.
+    materials_supplied = db.relationship('SupplierRelationship', backref='supplier_location', lazy='dynamic', cascade="all, delete-orphan")
+
 # =============================================
 # Item & Resource Domain
 # =============================================
@@ -124,6 +127,9 @@ class Material(ModelBase):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
+
+    # Relationship to the suppliers that can provide this material.
+    suppliers = db.relationship('SupplierRelationship', backref='material', lazy='dynamic', cascade="all, delete-orphan")
 
 class Operation(ModelBase):
     """
@@ -202,3 +208,38 @@ work_center_assets = db.Table('gj_work_center_assets',
     db.Column('created_at', db.DateTime, default=datetime.utcnow, nullable=False),
     db.Column('created_by_id', db.Integer, db.ForeignKey('gj_users.id'))
 )
+
+
+class SupplierRelationship(ModelBase):
+    """
+    Association object linking a Material to a SupplierLocation.
+    It stores details about the specific supply relationship.
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    material_id = db.Column(db.Integer, db.ForeignKey('gj_materials.id'), nullable=False)
+    sup_loc_id = db.Column(db.Integer, db.ForeignKey('gj_supplier_locations.id'), nullable=False)
+    
+    # Additional attributes of the relationship
+    supplier_part_num = db.Column(db.String(100)) # The part number used by the supplier
+    is_preferred = db.Column(db.Boolean, nullable=False, default=False) # Is this the preferred source?
+
+    # Audit Fields
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
+    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
+
+    # Unique constraint to prevent duplicate entries for the same material-supplier pair
+    __table_args__ = (db.UniqueConstraint('material_id', 'sup_loc_id', name='uq_material_supplier_loc'),)
+
+    def to_dict(self):
+        """Serializes the object to a dictionary."""
+        return {
+            "id": self.id,
+            "material_id": self.material_id,
+            "sup_loc_id": self.sup_loc_id,
+            "supplier_part_num": self.supplier_part_num,
+            "is_preferred": self.is_preferred,
+            "supplier_location": self.supplier_location.loc_name if self.supplier_location else None,
+            "supplier_code": self.supplier_location.supplier.code if self.supplier_location and self.supplier_location.supplier else None
+        }
