@@ -167,6 +167,12 @@ class Asset(ModelBase):
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
+    # Relationships to match AssetSchema
+    asset_group = db.relationship('AssetGroup', backref='assets', lazy=True)
+    supplier_location = db.relationship('SupplierLocation', foreign_keys=[sup_loc_id], lazy=True)
+    manufacturer = db.relationship('Supplier', foreign_keys=[mfg_id], lazy=True)
+
+
 class AssetGroup(ModelBase):
     """
     A logical grouping of assets (e.g., a production line).
@@ -200,6 +206,14 @@ class WorkCenter(ModelBase):
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
+    # Relationship for Work Centers and Assets (Many-to-Many)
+    assets = db.relationship(
+        'Asset', 
+        secondary='gj_work_center_assets', 
+        backref=db.backref('work_centers', lazy='dynamic'), 
+        lazy='dynamic'
+    )
+
 # --- Association Table for Work Centers and Assets ---
 work_center_assets = db.Table('gj_work_center_assets',
     db.Column('id', db.Integer, primary_key=True),
@@ -231,3 +245,4 @@ class SupplierRelationship(ModelBase):
 
     # Unique constraint to prevent duplicate entries for the same material-supplier pair
     __table_args__ = (db.UniqueConstraint('material_id', 'sup_loc_id', name='uq_material_supplier_loc'),)
+

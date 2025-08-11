@@ -154,12 +154,13 @@ class WorkCenterSchema(ma.SQLAlchemyAutoSchema):
     Schema for the WorkCenter model.
     Core master data for capacity planning.
     """
-    # assets = ma.Nested(AssetSchema, many=True, dump_only=True) # If you want to nest assets associated with the work center
+    assets = ma.Nested(AssetSchema, many=True, dump_only=True, 
+                        exclude=("created_at", "updated_at", "created_by_id", "updated_by_id")) # Now includes assets
 
     class Meta:
         model = WorkCenter
         fields = ("id", "plant_id", "name", "description", 
-                  "daily_avail_sec", "oee_pct",
+                  "daily_avail_sec", "oee_pct", "assets", # Add assets to fields
                   "created_at", "updated_at", "created_by_id", "updated_by_id")
         load_instance = True
 
