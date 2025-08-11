@@ -261,11 +261,10 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
 
     class Meta:
         model = User
-        # Exclude password_hash for security
-        exclude = ("password_hash",) 
         fields = ("id", "username", "full_name", "email", "is_active", "roles",
                   "created_at", "updated_at")
         load_instance = True
+
 
 class MenuSchema(ma.SQLAlchemyAutoSchema):
     """
@@ -274,7 +273,7 @@ class MenuSchema(ma.SQLAlchemyAutoSchema):
     """
     required_permission = ma.Nested(PermissionSchema, exclude=("created_at", "updated_at"), dump_only=True)
     # Use 'self' for recursive nesting
-    children = ma.Nested('self', many=True, dump_only=True, order_by='order_num') 
+    children = ma.Nested('self', many=True, dump_only=True) 
 
     class Meta:
         model = Menu
