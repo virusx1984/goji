@@ -21,13 +21,15 @@ def create_app(config_class=DevelopmentConfig):
     jwt.init_app(app)
     cors.init_app(app, resources={r"/api/*": {"origins": "*"}}) # Allow CORS for all API routes
     ma.init_app(app)
-    
+
     # Import and register Blueprints for API routes
-    from .apis.auth_api import bp as auth_bp
-    from .apis.user_management_api import bp as user_management_bp
+    from .apis.auth import bp as auth_bp
+    from .apis.users import bp as users_bp
+    from .apis.customers import bp as customers_bp
     
     app.register_blueprint(auth_bp)
-    app.register_blueprint(user_management_bp)
+    app.register_blueprint(users_bp)
+    app.register_blueprint(customers_bp)
 
     # Import and register custom CLI commands
     from .commands import seed_data_command

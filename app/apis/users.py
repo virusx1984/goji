@@ -1,11 +1,12 @@
-# goji/app/apis/user_management_api.py
+# goji/app/apis/users.py
 from flask import Blueprint, jsonify, request
 from ..models import User, Role, Permission, Menu
 from ..extensions import db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from functools import wraps
 
-bp = Blueprint('user_management', __name__, url_prefix='/api')
+# --- Recommended Change: Align Blueprint name with the filename for consistency ---
+bp = Blueprint('users', __name__, url_prefix='/api')
 
 # --- Decorator for Permission Checks ---
 def permission_required(permission_name):
@@ -87,6 +88,7 @@ def get_user(user_id):
     user = User.query.get_or_404(user_id)
     return jsonify(user.to_dict())
 
+# ... (The rest of the file remains unchanged) ...
 @bp.route("/users", methods=["POST"])
 @jwt_required()
 @permission_required('user:manage')
