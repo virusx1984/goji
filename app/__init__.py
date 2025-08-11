@@ -3,7 +3,7 @@ from flask import Flask
 from config import DevelopmentConfig # Import configurations
 
 # Import extensions
-from .extensions import db, migrate, bcrypt, jwt, cors
+from .extensions import db, migrate, bcrypt, jwt, cors, ma
 
 def create_app(config_class=DevelopmentConfig):
     """
@@ -20,7 +20,8 @@ def create_app(config_class=DevelopmentConfig):
     bcrypt.init_app(app)
     jwt.init_app(app)
     cors.init_app(app, resources={r"/api/*": {"origins": "*"}}) # Allow CORS for all API routes
-
+    ma.init_app(app)
+    
     # Import and register Blueprints for API routes
     from .apis.auth_api import bp as auth_bp
     from .apis.user_management_api import bp as user_management_bp

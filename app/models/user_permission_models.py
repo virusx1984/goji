@@ -37,9 +37,6 @@ class User(ModelBase):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-    # --- THIS IS THE FIX ---
-    # The 'secondaryjoin' argument is removed. SQLAlchemy can infer the
-    # non-ambiguous join from the association table to the Role table on its own.
     roles = db.relationship(
         'Role',
         secondary=user_roles,
@@ -53,15 +50,7 @@ class User(ModelBase):
     def check_password(self, password):
         return bcrypt.check_password_hash(self.password_hash, password)
 
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "username": self.username,
-            "full_name": self.full_name,
-            "email": self.email,
-            "is_active": self.is_active,
-            "roles": [role.to_dict_simple() for role in self.roles]
-        }
+    # Removed to_dict() method, now handled by UserSchema
 
 class Role(ModelBase):
     id = db.Column(db.Integer, primary_key=True)
@@ -72,19 +61,7 @@ class Role(ModelBase):
 
     permissions = db.relationship('Permission', secondary=role_permissions, backref=db.backref('roles', lazy='dynamic'))
     
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "name": self.name,
-            "description": self.description,
-            "permissions": [p.to_dict() for p in self.permissions]
-        }
-        
-    def to_dict_simple(self):
-        return {
-            "id": self.id,
-            "name": self.name
-        }
+    # Removed to_dict() and to_dict_simple(), now handled by RoleSchema and RoleSimpleSchema
 
 class Permission(ModelBase):
     id = db.Column(db.Integer, primary_key=True)
@@ -93,12 +70,7 @@ class Permission(ModelBase):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "name": self.name,
-            "description": self.description
-        }
+    # Removed to_dict() method, now handled by PermissionSchema
 
 class Menu(ModelBase):
     id = db.Column(db.Integer, primary_key=True)
@@ -112,13 +84,5 @@ class Menu(ModelBase):
     required_permission = db.relationship('Permission')
     children = db.relationship('Menu', backref=db.backref('parent', remote_side=[id]), lazy='dynamic', order_by='Menu.order_num')
     
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "parent_id": self.parent_id,
-            "name": self.name,
-            "route": self.route,
-            "icon": self.icon,
-            "order_num": self.order_num,
-            "children": [child.to_dict() for child in self.children]
-        }
+    # Removed to_dict() method, now handled by MenuSchema
+

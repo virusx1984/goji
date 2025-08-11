@@ -231,15 +231,3 @@ class SupplierRelationship(ModelBase):
 
     # Unique constraint to prevent duplicate entries for the same material-supplier pair
     __table_args__ = (db.UniqueConstraint('material_id', 'sup_loc_id', name='uq_material_supplier_loc'),)
-
-    def to_dict(self):
-        """Serializes the object to a dictionary."""
-        return {
-            "id": self.id,
-            "material_id": self.material_id,
-            "sup_loc_id": self.sup_loc_id,
-            "supplier_part_num": self.supplier_part_num,
-            "is_preferred": self.is_preferred,
-            "supplier_location": self.supplier_location.loc_name if self.supplier_location else None,
-            "supplier_code": self.supplier_location.supplier.code if self.supplier_location and self.supplier_location.supplier else None
-        }
