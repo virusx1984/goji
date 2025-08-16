@@ -50,8 +50,6 @@ class User(ModelBase):
     def check_password(self, password):
         return bcrypt.check_password_hash(self.password_hash, password)
 
-    # Removed to_dict() method, now handled by UserSchema
-
 class Role(ModelBase):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True, nullable=False)
@@ -60,8 +58,6 @@ class Role(ModelBase):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     permissions = db.relationship('Permission', secondary=role_permissions, backref=db.backref('roles', lazy='dynamic'))
-    
-    # Removed to_dict() and to_dict_simple(), now handled by RoleSchema and RoleSimpleSchema
 
 class Permission(ModelBase):
     id = db.Column(db.Integer, primary_key=True)
@@ -69,8 +65,6 @@ class Permission(ModelBase):
     description = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    
-    # Removed to_dict() method, now handled by PermissionSchema
 
 class Menu(ModelBase):
     id = db.Column(db.Integer, primary_key=True)
@@ -83,6 +77,3 @@ class Menu(ModelBase):
 
     required_permission = db.relationship('Permission')
     children = db.relationship('Menu', backref=db.backref('parent', remote_side=[id]), lazy='dynamic', order_by='Menu.order_num')
-    
-    # Removed to_dict() method, now handled by MenuSchema
-
