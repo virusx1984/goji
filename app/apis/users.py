@@ -1,14 +1,28 @@
 # goji/app/apis/users.py
 from flask import Blueprint, jsonify, request
-from ..models import User, Role, Permission, Menu
+from marshmallow import ValidationError
 from ..extensions import db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from functools import wraps
 
-# --- Recommended Change: Align Blueprint name with the filename for consistency ---
+# --- Change: Import models and now schemas ---
+from ..models import User, Role, Permission, Menu
+from ..schemas import UserSchema, RoleSchema, PermissionSchema, MenuSchema, RoleSimpleSchema
+
+# --- Change: Align Blueprint name with the filename for consistency ---
 bp = Blueprint('users', __name__, url_prefix='/api')
 
-# --- Decorator for Permission Checks ---
+# --- Change: Instantiate all necessary schemas for reuse ---
+user_schema = UserSchema()
+users_schema = UserSchema(many=True)
+role_schema = RoleSchema()
+roles_schema = RoleSchema(many=True)
+permission_schema = PermissionSchema()
+permissions_schema = PermissionSchema(many=True)
+menu_schema_single = MenuSchema() # For single menu item serialization
+menus_schema = MenuSchema(many=True) # For the final menu tree
+
+# --- Decorator for Permission Checks (No changes here) ---
 def permission_required(permission_name):
     """Custom decorator to check if a user has a specific permission."""
     def decorator(fn):
@@ -37,37 +51,40 @@ def get_menus():
     """Gets the accessible menu tree for the current logged-in user."""
     current_user_id = get_jwt_identity()
     user = User.query.get(current_user_id)
-    
     if not user:
         return jsonify({"msg": "User not found"}), 404
 
     user_permission_ids = {perm.id for role in user.roles for perm in role.permissions}
-    # Admin with 'admin:all' permission should see all menus
     is_admin = any('admin:all' in p.name for r in user.roles for p in r.permissions)
 
     def can_access(menu):
-        if is_admin:
-            return True
+        if is_admin: return True
         return menu.required_permission_id is None or menu.required_permission_id in user_permission_ids
 
+    # --- Change: This function now returns model instances, not dicts ---
     def build_menu_tree(menu_item):
         if not can_access(menu_item):
             return None
         
-        menu_dict = menu_item.to_dict()
-        accessible_children = []
-        for child in menu_item.children:
-            child_tree = build_menu_tree(child)
-            if child_tree:
-                accessible_children.append(child_tree)
-        
-        menu_dict['children'] = accessible_children
-        return menu_dict
+        # Filter children that the user can access
+        menu_item.accessible_children = [
+            child_tree for child in menu_item.children 
+            if (child_tree := build_menu_tree(child)) is not None
+        ]
+        return menu_item
 
     top_level_menus = Menu.query.filter(Menu.parent_id.is_(None)).order_by(Menu.order_num).all()
+    
+    # Build the tree of accessible model instances
     accessible_menu_tree = [menu for menu in [build_menu_tree(m) for m in top_level_menus] if menu is not None]
 
-    return jsonify(accessible_menu_tree)
+    # --- Change: Use the schema to dump the final result for consistency ---
+    # We need a custom schema for this to handle the temporary 'accessible_children' attribute
+    class DynamicMenuSchema(MenuSchema):
+        children = fields.Nested('self', many=True, dump_only=True, attribute='accessible_children')
+    
+    dynamic_menus_schema = DynamicMenuSchema(many=True)
+    return jsonify(dynamic_menus_schema.dump(accessible_menu_tree))
 
 # =============================================
 # User API Endpoints
@@ -78,7 +95,8 @@ def get_menus():
 def get_users():
     """Gets a list of all users."""
     users = User.query.all()
-    return jsonify([user.to_dict() for user in users])
+    # --- Change: Use schema to serialize the list of users ---
+    return jsonify(users_schema.dump(users))
 
 @bp.route("/users/<int:user_id>", methods=["GET"])
 @jwt_required()
@@ -86,30 +104,32 @@ def get_users():
 def get_user(user_id):
     """Gets a single user by ID."""
     user = User.query.get_or_404(user_id)
-    return jsonify(user.to_dict())
+    # --- Change: Use schema to serialize a single user ---
+    return jsonify(user_schema.dump(user))
 
-# ... (The rest of the file remains unchanged) ...
 @bp.route("/users", methods=["POST"])
 @jwt_required()
 @permission_required('user:manage')
 def create_user():
     """Creates a new user."""
-    data = request.get_json()
-    if not data or 'username' not in data or 'password' not in data:
-        return jsonify({"msg": "Missing username or password"}), 400
+    json_data = request.get_json()
+    if not json_data:
+        return jsonify({"msg": "No input data provided"}), 400
     
-    if User.query.filter_by(username=data['username']).first():
-        return jsonify({"msg": "Username already exists"}), 409
+    # --- Change: Use schema to validate and deserialize input ---
+    try:
+        # The @post_load in the schema handles User instance creation and password hashing
+        new_user = user_schema.load(json_data)
+        
+        # Handle role assignments separately after loading the user instance
+        if 'role_ids' in json_data:
+            new_user.roles = Role.query.filter(Role.id.in_(json_data['role_ids'])).all()
 
-    new_user = User(
-        username=data['username'],
-        full_name=data.get('full_name'),
-        email=data.get('email')
-    )
-    new_user.set_password(data['password'])
-    db.session.add(new_user)
-    db.session.commit()
-    return jsonify(new_user.to_dict()), 201
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify(user_schema.dump(new_user)), 201
+    except ValidationError as err:
+        return jsonify(err.messages), 400
 
 @bp.route("/users/<int:user_id>", methods=["PUT"])
 @jwt_required()
@@ -117,19 +137,23 @@ def create_user():
 def update_user(user_id):
     """Updates a user's information and assigned roles."""
     user = User.query.get_or_404(user_id)
-    data = request.get_json()
+    json_data = request.get_json()
+    if not json_data:
+        return jsonify({"msg": "No input data provided"}), 400
 
-    # Update basic info
-    user.full_name = data.get('full_name', user.full_name)
-    user.email = data.get('email', user.email)
-    user.is_active = data.get('is_active', user.is_active)
+    # --- Change: Use schema to validate and load data into the existing user instance ---
+    try:
+        # The schema's @post_load will update the user instance with new data
+        updated_user = user_schema.load(json_data, instance=user, partial=True)
 
-    # Update roles
-    if 'role_ids' in data:
-        user.roles = Role.query.filter(Role.id.in_(data['role_ids'])).all()
+        # Handle role assignments separately after loading
+        if 'role_ids' in json_data:
+            updated_user.roles = Role.query.filter(Role.id.in_(json_data['role_ids'])).all()
 
-    db.session.commit()
-    return jsonify(user.to_dict())
+        db.session.commit()
+        return jsonify(user_schema.dump(updated_user))
+    except ValidationError as err:
+        return jsonify(err.messages), 400
 
 # =============================================
 # Role & Permission API Endpoints
@@ -140,7 +164,8 @@ def update_user(user_id):
 def get_roles():
     """Gets a list of all roles."""
     roles = Role.query.all()
-    return jsonify([role.to_dict() for role in roles])
+    # --- Change: Use schema for serialization ---
+    return jsonify(roles_schema.dump(roles))
 
 @bp.route("/roles/<int:role_id>", methods=["GET"])
 @jwt_required()
@@ -148,24 +173,30 @@ def get_roles():
 def get_role(role_id):
     """Gets a single role by ID."""
     role = Role.query.get_or_404(role_id)
-    return jsonify(role.to_dict())
+    # --- Change: Use schema for serialization ---
+    return jsonify(role_schema.dump(role))
 
 @bp.route("/roles", methods=["POST"])
 @jwt_required()
 @permission_required('user:manage')
 def create_role():
     """Creates a new role."""
-    data = request.get_json()
-    if not data or 'name' not in data:
-        return jsonify({"msg": "Missing role name"}), 400
+    json_data = request.get_json()
+    if not json_data:
+        return jsonify({"msg": "No input data provided"}), 400
+    # --- Change: Use schema for validation and deserialization ---
+    try:
+        new_role = role_schema.load(json_data)
+        
+        # Handle permission assignments after loading
+        if 'permission_ids' in json_data:
+            new_role.permissions = Permission.query.filter(Permission.id.in_(json_data['permission_ids'])).all()
 
-    if Role.query.filter_by(name=data['name']).first():
-        return jsonify({"msg": "Role name already exists"}), 409
-
-    new_role = Role(name=data['name'], description=data.get('description'))
-    db.session.add(new_role)
-    db.session.commit()
-    return jsonify(new_role.to_dict()), 201
+        db.session.add(new_role)
+        db.session.commit()
+        return jsonify(role_schema.dump(new_role)), 201
+    except ValidationError as err:
+        return jsonify(err.messages), 400
 
 @bp.route("/roles/<int:role_id>", methods=["PUT"])
 @jwt_required()
@@ -173,16 +204,21 @@ def create_role():
 def update_role(role_id):
     """Updates a role's information and assigned permissions."""
     role = Role.query.get_or_404(role_id)
-    data = request.get_json()
+    json_data = request.get_json()
+    if not json_data:
+        return jsonify({"msg": "No input data provided"}), 400
+    # --- Change: Use schema to load data into the existing role instance ---
+    try:
+        updated_role = role_schema.load(json_data, instance=role, partial=True)
 
-    role.name = data.get('name', role.name)
-    role.description = data.get('description', role.description)
-
-    if 'permission_ids' in data:
-        role.permissions = Permission.query.filter(Permission.id.in_(data['permission_ids'])).all()
-
-    db.session.commit()
-    return jsonify(role.to_dict())
+        # Handle permission assignments after loading
+        if 'permission_ids' in json_data:
+            updated_role.permissions = Permission.query.filter(Permission.id.in_(json_data['permission_ids'])).all()
+        
+        db.session.commit()
+        return jsonify(role_schema.dump(updated_role))
+    except ValidationError as err:
+        return jsonify(err.messages), 400
 
 @bp.route("/permissions", methods=["GET"])
 @jwt_required()
@@ -190,4 +226,5 @@ def update_role(role_id):
 def get_permissions():
     """Gets a list of all available permissions."""
     permissions = Permission.query.all()
-    return jsonify([p.to_dict() for p in permissions])
+    # --- Change: Use schema for serialization ---
+    return jsonify(permissions_schema.dump(permissions))
