@@ -63,5 +63,7 @@ class MenuSchema(ma.SQLAlchemyAutoSchema):
 
     class Meta:
         model = Menu
-        fields = ("id", "parent_id", "name", "route", "icon", "order_num", 
-                  "required_permission_id", "required_permission", "children")
+        # --- REMOVE THE 'fields' TUPLE ---
+        # By removing 'fields', SQLAlchemyAutoSchema will automatically include
+        # all columns from the Menu model, which is the desired behavior.
+        load_instance = True # It's good practice to add this
