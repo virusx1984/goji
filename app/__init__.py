@@ -19,17 +19,20 @@ def create_app(config_class=DevelopmentConfig):
     migrate.init_app(app, db)
     bcrypt.init_app(app)
     jwt.init_app(app)
-    cors.init_app(app, resources={r"/api/*": {"origins": "*"}}) # Allow CORS for all API routes
+    cors.init_app(app, resources={r"/api/*": {"origins": "*"}})
     ma.init_app(app)
 
-    # Import and register Blueprints for API routes
+    # --- Blueprints from the old 'apis' structure that are not yet refactored ---
     from .apis.auth import bp as auth_bp
-    from .apis.users import bp as users_bp
     from .apis.customers import bp as customers_bp
     
+    # --- NEW: Import the blueprint from the new 'user_management' feature module ---
+    from .user_management import bp as user_management_bp
+    
+    # Register all blueprints
     app.register_blueprint(auth_bp)
-    app.register_blueprint(users_bp)
     app.register_blueprint(customers_bp)
+    app.register_blueprint(user_management_bp) # <-- Register the new blueprint
 
     # Import and register custom CLI commands
     from .commands import seed_data_command

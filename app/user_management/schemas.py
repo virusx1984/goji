@@ -1,7 +1,7 @@
 # goji/app/schemas/user_management_schemas.py
 from marshmallow import fields, validate, post_load
 from ..extensions import ma
-from ..models import User, Role, Permission, Menu
+from .models import User, Role, Permission, Menu
 
 class PermissionSchema(ma.SQLAlchemyAutoSchema):
     """Schema for the Permission model."""

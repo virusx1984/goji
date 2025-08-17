@@ -1,7 +1,7 @@
 # goji/app/models/user_permission_models.py
 from ..extensions import db, bcrypt
 from datetime import datetime
-from .base_model import ModelBase
+from ..models.base_model import ModelBase
 
 # --- Association Tables ---
 
