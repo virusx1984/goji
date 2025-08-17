@@ -1,4 +1,4 @@
-# goji/app/schemas/user_management_schemas.py
+# goji/app/user_management/schemas.py
 from marshmallow import fields, validate, post_load
 from ..extensions import ma
 from .models import User, Role, Permission, Menu

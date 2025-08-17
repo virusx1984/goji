@@ -5,5 +5,5 @@
 # to make them easily importable from other parts of the application.
 
 from .routes import bp
-from .models import User, Role, Permission, Menu
+from .models import User, Role, Permission, Menu, user_roles, role_permissions
 from .schemas import UserSchema, RoleSchema, RoleSimpleSchema, PermissionSchema, MenuSchema

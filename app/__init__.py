@@ -24,15 +24,16 @@ def create_app(config_class=DevelopmentConfig):
 
     # --- Blueprints from the old 'apis' structure that are not yet refactored ---
     from .apis.auth import bp as auth_bp
-    from .apis.customers import bp as customers_bp
+    from .master_data import bp as customers_bp
     
-    # --- NEW: Import the blueprint from the new 'user_management' feature module ---
     from .user_management import bp as user_management_bp
+    from .organization import bp as organization_bp
     
     # Register all blueprints
     app.register_blueprint(auth_bp)
     app.register_blueprint(customers_bp)
-    app.register_blueprint(user_management_bp) # <-- Register the new blueprint
+    app.register_blueprint(user_management_bp)
+    app.register_blueprint(organization_bp)
 
     # Import and register custom CLI commands
     from .commands import seed_data_command

@@ -1,4 +1,4 @@
-# goji/app/schemas/master_data_schemas.py
+# goji/app/master_data/schemas.py
 from ..extensions import ma
 from .models import (
     Customer, 

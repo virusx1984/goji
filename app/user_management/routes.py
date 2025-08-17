@@ -1,4 +1,4 @@
-# goji/app/apis/users.py
+# goji/app/user_management/routes.py
 from flask import Blueprint, jsonify, request
 from marshmallow import ValidationError
 from ..extensions import db
@@ -6,8 +6,8 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from functools import wraps
 
 # --- Change: Import models and now schemas ---
-from ..models import User, Role, Permission, Menu
-from ..schemas import UserSchema, RoleSchema, PermissionSchema, MenuSchema, RoleSimpleSchema
+from .models import User, Role, Permission, Menu
+from .schemas import UserSchema, RoleSchema, PermissionSchema, MenuSchema, RoleSimpleSchema
 
 # --- Change: Align Blueprint name with the filename for consistency ---
 bp = Blueprint('users', __name__, url_prefix='/api')

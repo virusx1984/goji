@@ -1,11 +1,11 @@
-# goji/app/apis/customers.py
+# goji/app/master_data/routes.py
 from flask import Blueprint, request, jsonify
 from marshmallow import ValidationError
 
 # Use relative imports to get modules from the parent directory
 from ..extensions import db 
-from ..models.master_data_models import Customer
-from ..schemas import CustomerSchema
+from .models import Customer
+from .schemas import CustomerSchema
 
 # --- Key Change: Create its own Blueprint for this file ---
 bp = Blueprint('customers', __name__, url_prefix='/api')

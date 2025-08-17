@@ -1,6 +1,6 @@
-# goji/app/apis/auth_api.py
+# goji/app/apis/auth.py
 from flask import Blueprint, request, jsonify
-from ..models import User
+from ..user_management import User
 from flask_jwt_extended import create_access_token
 
 bp = Blueprint('auth', __name__, url_prefix='/api/auth')

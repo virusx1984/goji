@@ -1,6 +1,6 @@
-# goji/app/models/master_data_models.py
+# goji/app/master_data/models.py
 from ..extensions import db
-from .base_model import ModelBase
+from ..models import ModelBase
 from datetime import datetime
 
 # =============================================
@@ -172,7 +172,6 @@ class Asset(ModelBase):
     supplier_location = db.relationship('SupplierLocation', foreign_keys=[sup_loc_id], lazy=True)
     manufacturer = db.relationship('Supplier', foreign_keys=[mfg_id], lazy=True)
 
-
 class AssetGroup(ModelBase):
     """
     A logical grouping of assets (e.g., a production line).
@@ -222,7 +221,6 @@ work_center_assets = db.Table('gj_work_center_assets',
     db.Column('created_at', db.DateTime, default=datetime.utcnow, nullable=False),
     db.Column('created_by_id', db.Integer, db.ForeignKey('gj_users.id'))
 )
-
 
 class SupplierRelationship(ModelBase):
     """

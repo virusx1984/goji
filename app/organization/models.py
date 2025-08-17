@@ -1,4 +1,4 @@
-# goji/app/models/organization_models.py
+# goji/app/organization/models.py
 from ..extensions import db
 from ..models import ModelBase
 from datetime import datetime
