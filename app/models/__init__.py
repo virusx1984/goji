@@ -5,7 +5,7 @@
 # easily discovered by Flask-Migrate.
 
 from .base_model import ModelBase
-from ..organization import *
-from ..user_management import *
-from ..master_data import *
+from ..organization.models import *
+from ..user_management.models import *
+from ..master_data.models import *
 

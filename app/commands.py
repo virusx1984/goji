@@ -2,18 +2,10 @@
 from flask.cli import with_appcontext
 import click
 from .extensions import db
-from .models import (
-    User, 
-    Role, 
-    Permission, 
-    Menu, 
-    Plant, 
-    BusinessUnit, 
-    LegalEntity,
-    FactoryCluster,
-    user_roles, 
-    role_permissions
-)
+# This makes dependencies explicit and avoids circular import issues.
+from .user_management.models import User, Role, Permission, Menu, user_roles, role_permissions
+from .organization.models import Plant, BusinessUnit, LegalEntity, FactoryCluster
+
 
 @click.command(name='seed')
 @with_appcontext

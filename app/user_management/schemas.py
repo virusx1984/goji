@@ -7,14 +7,12 @@ class PermissionSchema(ma.SQLAlchemyAutoSchema):
     """Schema for the Permission model."""
     class Meta:
         model = Permission
-        fields = ("id", "name", "description")
         load_instance = True
 
 class RoleSimpleSchema(ma.SQLAlchemyAutoSchema):
     """A simple Role schema for nested display, excluding permissions."""
     class Meta:
         model = Role
-        fields = ("id", "name")
 
 class RoleSchema(ma.SQLAlchemyAutoSchema):
     """A complete schema for Role, including nested permissions."""
@@ -24,7 +22,6 @@ class RoleSchema(ma.SQLAlchemyAutoSchema):
 
     class Meta:
         model = Role
-        fields = ("id", "name", "description", "permissions", "permission_ids")
         load_instance = True
 
 class UserSchema(ma.SQLAlchemyAutoSchema):
@@ -37,7 +34,7 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
 
     class Meta:
         model = User
-        fields = ("id", "username", "full_name", "email", "is_active", "roles", "password", "role_ids")
+        exclude = ('password_hash',)
         load_instance = False # We handle instance creation manually with @post_load
 
     @post_load
