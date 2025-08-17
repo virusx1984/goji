@@ -1,6 +1,6 @@
 # goji/app/models/organization_models.py
 from ..extensions import db
-from .base_model import ModelBase
+from ..models import ModelBase
 from datetime import datetime
 
 class BusinessUnit(ModelBase):

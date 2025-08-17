@@ -1,10 +1,25 @@
 # goji/app/schemas/master_data_schemas.py
 from ..extensions import ma
-from ..models.master_data_models import (
-    Material, SupplierLocation, SupplierRelationship, Customer, CustomerLocation,
-    Supplier, Product, Operation, Asset, AssetGroup, WorkCenter
+from .models import (
+    Customer, 
+    CustomerLocation,
+    Supplier,
+    SupplierLocation,
+    Product,
+    Material,
+    Operation,
+    Asset,
+    AssetGroup,
+    WorkCenter,
+    SupplierRelationship,
 )
-from ..models.organization_models import BusinessUnit, LegalEntity, FactoryCluster, Plant
+
+from ..organization import(
+    BusinessUnit,
+    LegalEntity,
+    FactoryCluster,
+    Plant,
+)
 
 # =============================================
 # Master Data & Organization Schemas
