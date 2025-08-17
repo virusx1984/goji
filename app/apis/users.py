@@ -54,37 +54,25 @@ def get_menus():
     if not user:
         return jsonify({"msg": "User not found"}), 404
 
+    # 1. Define the permission check logic
     user_permission_ids = {perm.id for role in user.roles for perm in role.permissions}
     is_admin = any('admin:all' in p.name for r in user.roles for p in r.permissions)
 
     def can_access(menu):
         if is_admin: return True
         return menu.required_permission_id is None or menu.required_permission_id in user_permission_ids
-
-    # --- Change: This function now returns model instances, not dicts ---
-    def build_menu_tree(menu_item):
-        if not can_access(menu_item):
-            return None
-        
-        # Filter children that the user can access
-        menu_item.accessible_children = [
-            child_tree for child in menu_item.children 
-            if (child_tree := build_menu_tree(child)) is not None
-        ]
-        return menu_item
-
+    
+    # 2. Fetch only the top-level menus
     top_level_menus = Menu.query.filter(Menu.parent_id.is_(None)).order_by(Menu.order_num).all()
-    
-    # Build the tree of accessible model instances
-    accessible_menu_tree = [menu for menu in [build_menu_tree(m) for m in top_level_menus] if menu is not None]
 
-    # --- Change: Use the schema to dump the final result for consistency ---
-    # We need a custom schema for this to handle the temporary 'accessible_children' attribute
-    class DynamicMenuSchema(MenuSchema):
-        children = fields.Nested('self', many=True, dump_only=True, attribute='accessible_children')
-    
-    dynamic_menus_schema = DynamicMenuSchema(many=True)
-    return jsonify(dynamic_menus_schema.dump(accessible_menu_tree))
+    # 3. Filter the top-level menus first
+    accessible_top_level = [menu for menu in top_level_menus if can_access(menu)]
+
+    # 4. Instantiate the schema, passing the check function in the context
+    # The schema will now handle the recursion and filtering internally.
+    schema_with_context = MenuSchema(many=True, context={'can_access': can_access})
+
+    return jsonify(schema_with_context.dump(accessible_top_level))
 
 # =============================================
 # User API Endpoints
