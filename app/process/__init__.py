@@ -8,5 +8,4 @@ from .models import (
     OperationResource,
     BomItem,
     AlternateMaterial,
-    MaterialSupplier
 )

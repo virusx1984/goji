@@ -129,21 +129,4 @@ class AlternateMaterial(ModelBase):
     # Relationship
     material = db.relationship('Material', foreign_keys=[alt_material_id])
 
-class MaterialSupplier(ModelBase):
-    """Links a material to a supplier with purchasing details."""
-    id = db.Column(db.Integer, primary_key=True)
-    material_id = db.Column(db.Integer, db.ForeignKey('gj_materials.id'), nullable=False)
-    sup_loc_id = db.Column(db.Integer, db.ForeignKey('gj_supplier_locations.id'), nullable=False)
-    sup_part_num = db.Column(db.String(100))
-    lead_time_days = db.Column(db.Integer)
-    unit_price = db.Column(db.Numeric(12, 6))
-    min_order_qty = db.Column(db.Integer)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-
-    # Relationships
-    material = db.relationship('Material')
-    supplier_location = db.relationship('SupplierLocation')

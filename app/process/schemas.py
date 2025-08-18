@@ -2,7 +2,7 @@
 from ..extensions import ma
 from .models import (
     Routing, RoutingOperation, LayerDefinition, LayerStructure,
-    OperationResource, BomItem, AlternateMaterial, MaterialSupplier
+    OperationResource, BomItem, AlternateMaterial
 )
 
 class AlternateMaterialSchema(ma.SQLAlchemyAutoSchema):
@@ -49,8 +49,3 @@ class LayerStructureSchema(ma.SQLAlchemyAutoSchema):
         load_instance = True
         include_relationships = True
 
-class MaterialSupplierSchema(ma.SQLAlchemyAutoSchema):
-    class Meta:
-        model = MaterialSupplier
-        load_instance = True
-        include_relationships = True

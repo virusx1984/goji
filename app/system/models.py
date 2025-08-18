@@ -2,6 +2,7 @@
 from ..extensions import db
 from ..models import ModelBase
 from sqlalchemy.dialects.postgresql import JSONB
+from datetime import datetime
 
 class AuditLog(ModelBase):
     """Stores a log of all significant create, update, delete actions."""
