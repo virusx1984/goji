@@ -62,6 +62,22 @@ class Supplier(ModelBase):
     # Relationships
     locations = db.relationship('SupplierLocation', backref='supplier', lazy='dynamic', cascade="all, delete-orphan")
 
+    # --- ADDED: Relationships for supplier-to-supplier connections ---
+    # Relationships where this supplier is the agent/subsidiary
+    manufacturers = db.relationship(
+        'SupplierRelationship', 
+        foreign_keys='SupplierRelationship.supplier_id',
+        backref='agent_supplier',
+        lazy='dynamic'
+    )
+    # Relationships where this supplier is the manufacturer/parent
+    agents = db.relationship(
+        'SupplierRelationship', 
+        foreign_keys='SupplierRelationship.mfg_id',
+        backref='manufacturer_supplier',
+        lazy='dynamic'
+    )
+
 class SupplierLocation(ModelBase):
     """
     Stores supplier's physical shipping/service locations.
@@ -81,8 +97,8 @@ class SupplierLocation(ModelBase):
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-    # Relationship to the materials this location can supply.
-    materials_supplied = db.relationship('SupplierRelationship', backref='supplier_location', lazy='dynamic', cascade="all, delete-orphan")
+    # --- CHANGED: Relationship points to the correctly named 'MaterialSupplier' class ---
+    materials_supplied = db.relationship('MaterialSupplier', backref='supplier_location', lazy='dynamic', cascade="all, delete-orphan")
 
 # =============================================
 # Item & Resource Domain
@@ -128,8 +144,8 @@ class Material(ModelBase):
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-    # Relationship to the suppliers that can provide this material.
-    suppliers = db.relationship('SupplierRelationship', backref='material', lazy='dynamic', cascade="all, delete-orphan")
+    # --- CHANGED: Relationship points to the correctly named 'MaterialSupplier' class ---
+    suppliers = db.relationship('MaterialSupplier', backref='material', lazy='dynamic', cascade="all, delete-orphan")
 
 class Operation(ModelBase):
     """
@@ -222,10 +238,11 @@ work_center_assets = db.Table('gj_work_center_assets',
     db.Column('created_by_id', db.Integer, db.ForeignKey('gj_users.id'))
 )
 
-class SupplierRelationship(ModelBase):
+# --- RENAMED: This class now correctly represents the 'material_suppliers' table ---
+class MaterialSupplier(ModelBase):
     """
     Association object linking a Material to a SupplierLocation.
-    It stores details about the specific supply relationship.
+    This corresponds to the 'material_suppliers' table in the design doc.
     """
     id = db.Column(db.Integer, primary_key=True)
     material_id = db.Column(db.Integer, db.ForeignKey('gj_materials.id'), nullable=False)
@@ -244,3 +261,19 @@ class SupplierRelationship(ModelBase):
     # Unique constraint to prevent duplicate entries for the same material-supplier pair
     __table_args__ = (db.UniqueConstraint('material_id', 'sup_loc_id', name='uq_material_supplier_loc'),)
 
+# --- ADDED: The missing 'supplier_relationships' model ---
+class SupplierRelationship(ModelBase):
+    """
+    Defines relationships between suppliers (e.g., agent, parent company).
+    This corresponds to the 'supplier_relationships' table in the design doc.
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    # This is the agent or subsidiary supplier
+    supplier_id = db.Column(db.Integer, db.ForeignKey('gj_suppliers.id'), nullable=False)
+    # This is the manufacturer or parent company supplier
+    mfg_id = db.Column(db.Integer, db.ForeignKey('gj_suppliers.id'), nullable=False)
+    relation_type = db.Column(db.String(50), nullable=False) # e.g., 'Agent', 'Group Member'
+
+    # Audit Fields
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))

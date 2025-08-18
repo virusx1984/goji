@@ -11,18 +11,6 @@ from .models import (
     Asset,
     AssetGroup,
     WorkCenter,
+    MaterialSupplier,
     SupplierRelationship,
-)
-from .schemas import(
-    CustomerSchema,
-    CustomerLocationSchema,
-    SupplierSchema,
-    SupplierLocationSchema,
-    ProductSchema,
-    MaterialSchema,
-    OperationSchema,
-    AssetSchema,
-    AssetGroupSchema,
-    WorkCenterSchema,
-    SupplierRelationshipSchema,    
 )
