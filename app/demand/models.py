@@ -1,4 +1,3 @@
-# 
 # goji/app/demand/models.py
 from ..extensions import db
 from ..models import ModelBase
