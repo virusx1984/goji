@@ -12,7 +12,7 @@ from .schemas import UserSchema, RoleSchema, PermissionSchema, MenuSchema, RoleS
 # --- Change: Align Blueprint name with the filename for consistency ---
 bp = Blueprint('users', __name__, url_prefix='/api')
 
-# --- Change: Instantiate all necessary schemas for reuse ---
+# --- Instantiate all necessary schemas for reuse ---
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
 role_schema = RoleSchema()
@@ -42,6 +42,13 @@ def permission_required(permission_name):
         return wrapper
     return decorator
 
+# --- CHANGE: Move the permission check function to the module level ---
+def can_access(menu, is_admin, user_permission_ids):
+    """Determines if a menu item is accessible based on user permissions."""
+    if is_admin:
+        return True
+    return menu.required_permission_id is None or menu.required_permission_id in user_permission_ids
+
 # =============================================
 # Menu API Endpoints
 # =============================================
@@ -54,19 +61,15 @@ def get_menus():
     if not user:
         return jsonify({"msg": "User not found"}), 404
 
-    # 1. Define the permission check logic
+    # 1. Get user permissions and admin status
     user_permission_ids = {perm.id for role in user.roles for perm in role.permissions}
     is_admin = any('admin:all' in p.name for r in user.roles for p in r.permissions)
 
-    def can_access(menu):
-        if is_admin: return True
-        return menu.required_permission_id is None or menu.required_permission_id in user_permission_ids
-    
     # 2. Fetch only the top-level menus
     top_level_menus = Menu.query.filter(Menu.parent_id.is_(None)).order_by(Menu.order_num).all()
 
-    # 3. Filter the top-level menus first
-    accessible_top_level = [menu for menu in top_level_menus if can_access(menu)]
+    # 3. Filter the top-level menus first, passing the necessary variables
+    accessible_top_level = [menu for menu in top_level_menus if can_access(menu, is_admin, user_permission_ids)]
 
     # 4. Instantiate the schema, passing the check function in the context
     # The schema will now handle the recursion and filtering internally.
