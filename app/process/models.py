@@ -83,9 +83,17 @@ class OperationResource(ModelBase):
     routing_op_id = db.Column(db.Integer, db.ForeignKey('gj_routing_operations.id'), nullable=False)
     wc_id = db.Column(db.Integer, db.ForeignKey('gj_work_centers.id'), nullable=False)
     setup_time_sec = db.Column(db.Integer, nullable=False, default=0)
+    
+    # --- ADDED: Raw measurement fields for flexible time input ---
+    raw_run_time_val = db.Column(db.Numeric(12, 6))          # Original measured time value
+    raw_run_time_uom = db.Column(db.String(20))              # Original measurement unit (e.g., 'min/pcs', 'sec/panel')
+    items_per_raw_uom = db.Column(db.Integer)                # Conversion rate: number of items per raw UOM
+    
+    # --- Standardized field for planning engine ---
     run_time_sec_per_pc = db.Column(db.Numeric(12, 6), nullable=False)
-    pref_level = db.Column(db.Integer, nullable=False, default=1)
-    is_active = db.Column(db.Boolean, nullable=False, default=True)
+    
+    pref_level = db.Column(db.Integer, nullable=False, default=1)  # Priority level (1=preferred)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)  # Whether this resource option is active
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
@@ -94,6 +102,7 @@ class OperationResource(ModelBase):
 
     # Relationship
     work_center = db.relationship('WorkCenter')
+    
 
 class BomItem(ModelBase):
     """Defines a single material requirement for a routing operation."""
