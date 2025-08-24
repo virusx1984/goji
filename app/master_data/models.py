@@ -249,8 +249,14 @@ class MaterialSupplier(ModelBase):
     sup_loc_id = db.Column(db.Integer, db.ForeignKey('gj_supplier_locations.id'), nullable=False)
     
     # Additional attributes of the relationship
-    supplier_part_num = db.Column(db.String(100)) # The part number used by the supplier
-    is_preferred = db.Column(db.Boolean, nullable=False, default=False) # Is this the preferred source?
+    supplier_part_num = db.Column(db.String(100))  # The part number used by the supplier
+    is_preferred = db.Column(db.Boolean, nullable=False, default=False)  # Is this the preferred source?
+
+    # --- ADDED: Procurement and pricing fields ---
+    lead_time_days = db.Column(db.Integer)  # Procurement lead time in days
+    unit_price = db.Column(db.Numeric(12, 6))  # Purchase unit price
+    min_order_qty = db.Column(db.Numeric(12, 4))  # Minimum order quantity (MOQ)
+    currency = db.Column(db.String(3), default='USD')  # Currency code for pricing
 
     # Audit Fields
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
@@ -260,6 +266,7 @@ class MaterialSupplier(ModelBase):
 
     # Unique constraint to prevent duplicate entries for the same material-supplier pair
     __table_args__ = (db.UniqueConstraint('material_id', 'sup_loc_id', name='uq_material_supplier_loc'),)
+
 
 # --- ADDED: The missing 'supplier_relationships' model ---
 class SupplierRelationship(ModelBase):

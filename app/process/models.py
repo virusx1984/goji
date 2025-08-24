@@ -102,20 +102,25 @@ class OperationResource(ModelBase):
 
     # Relationship
     work_center = db.relationship('WorkCenter')
-    
+
+
 
 class BomItem(ModelBase):
     """Defines a single material requirement for a routing operation."""
     id = db.Column(db.Integer, primary_key=True)
     routing_op_id = db.Column(db.Integer, db.ForeignKey('gj_routing_operations.id'), nullable=False)
     material_id = db.Column(db.Integer, db.ForeignKey('gj_materials.id'), nullable=False)
-    quantity = db.Column(db.Numeric(12, 6), nullable=False)
-    uom = db.Column(db.String(20), nullable=False)
-    base_qty = db.Column(db.Numeric(12, 6), nullable=False, default=1)
-    base_uom = db.Column(db.String(20), nullable=False, default='pcs')
-    scrap_pct = db.Column(db.Numeric(5, 4), nullable=False, default=0)
+    
+    # --- CORRECTED: Standardized BOM calculation fields ---
+    quantity = db.Column(db.Numeric(12, 6), nullable=False)          # Numerator: input material quantity
+    uom = db.Column(db.String(20), nullable=False)                   # Numerator: input material unit
+    base_qty = db.Column(db.Numeric(12, 6), nullable=False, default=1)      # Denominator: output product base quantity
+    base_uom = db.Column(db.String(20), nullable=False, default='pcs')      # Denominator: output product base unit
+    multiplier = db.Column(db.Numeric(12, 6), nullable=False, default=1)    # Multiplier coefficient
+    scrap_pct = db.Column(db.Numeric(5, 4), nullable=False, default=0)      # Scrap percentage (0-1 range)
+    
     notes = db.Column(db.String(500))
-
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
