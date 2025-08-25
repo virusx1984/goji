@@ -14,5 +14,5 @@ class AuditLog(ModelBase):
     before_value = db.Column(JSONB)
     after_value = db.Column(JSONB)
     ip_address = db.Column(db.String(50))
-    timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, nullablpe=False, default=datetime.utcnow)
 

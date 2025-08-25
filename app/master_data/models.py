@@ -22,6 +22,7 @@ class Customer(ModelBase):
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
 
+
 class CustomerLocation(ModelBase):
     """
     Stores customer's physical delivery locations (Ship-To).
@@ -95,6 +96,7 @@ class Product(ModelBase):
     description = db.Column(db.String(500))
     pcs_per_strip = db.Column(db.Integer)
     strips_per_panel = db.Column(db.Integer)
+    end_cust_id = db.Column(db.Integer, db.ForeignKey('gj_customers.id'), nullable=True)
 
     # Audit Fields
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)

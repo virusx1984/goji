@@ -77,36 +77,39 @@ def seed_data_command():
     db.session.commit()
 
     # Manually associate roles and permissions via the association table
-    # admin_role.permissions.append(permissions['admin:all']) # This uses relationship, so we need to do it manually
     db.session.execute(role_permissions.insert().values(role_id=admin_role.id, permission_id=permissions['admin:all'].id))
     db.session.execute(role_permissions.insert().values(role_id=planner_role.id, permission_id=permissions['plan:view'].id))
     db.session.commit()
 
     # Manually associate users and roles via the association table
-    # admin_user.roles.append(admin_role) # This uses relationship, so we need to do it manually
     db.session.execute(user_roles.insert().values(user_id=admin_user.id, role_id=admin_role.id))
     db.session.execute(user_roles.insert().values(user_id=planner_user.id, role_id=planner_role.id))
     db.session.commit()
     
     # --- Step 3: Create Organizational Structure ---
-    default_bu = BusinessUnit(name='PCB Manufacturing BU', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    default_le = LegalEntity(name='Goji Electronics Ltd.', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    db.session.add_all([default_bu, default_le])
+    bu_hdi = BusinessUnit(name='HDI', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    le_pengding = LegalEntity(name='鵬鼎', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    le_qingding = LegalEntity(name='慶鼎', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    db.session.add_all([bu_hdi, le_pengding, le_qingding])
     db.session.commit()
     
-    default_cluster = FactoryCluster(name='HDI Production Cluster', bu_id=default_bu.id, legal_entity_id=default_le.id, created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    db.session.add(default_cluster)
+    cluster_sz1 = FactoryCluster(name='深圳一園區', bu_id=bu_hdi.id, legal_entity_id=le_pengding.id, created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    cluster_ha2 = FactoryCluster(name='淮安二園區', bu_id=bu_hdi.id, legal_entity_id=le_qingding.id, created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    db.session.add([cluster_sz1, cluster_ha2])
     db.session.commit()
 
-    default_plant = Plant(name='Shenzhen HDI Plant', cluster_id=default_cluster.id, created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    db.session.add(default_plant)
+    plant_sa03 = Plant(name='SA03', cluster_id=cluster_sz1.id, created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    plant_sa02 = Plant(name='SA02', cluster_id=cluster_sz1.id, created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    plant_hb04 = Plant(name='HB04', cluster_id=cluster_sz1.id, created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    db.session.add([plant_sa03, plant_sa02, plant_hb04])
     db.session.commit()
 
     # --- Step 4: Create Core Master Data for HDI PCB ---
     # Customer
-    customer_apple = Customer(code='CUST-APPLE', name='Apple Inc.', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    customer_apple = Customer(code='0AP', name='H客戶', created_by_id=admin_user.id, updated_by_id=admin_user.id)
     db.session.add(customer_apple)
     db.session.commit()
+    
     apple_location = CustomerLocation(cust_id=customer_apple.id, loc_name='Cupertino HQ', is_default=True, created_by_id=admin_user.id, updated_by_id=admin_user.id)
 
     # Suppliers
@@ -234,7 +237,8 @@ def seed_data_command():
     db.session.commit()
 
     # --- Step 6: Create Demand Data (Sales Order) ---
-    so_apple = SalesOrder(cust_id=customer_apple.id, ship_to_loc_id=apple_location.id, 
+    # FIX: Added a unique order_num for SalesOrder
+    so_apple = SalesOrder(order_num='SO-2025-HDI001', cust_id=customer_apple.id, ship_to_loc_id=apple_location.id, 
                          order_date=date.today(), 
                          created_by_id=admin_user.id, updated_by_id=admin_user.id)
     db.session.add(so_apple)
