@@ -17,8 +17,7 @@ class BusinessUnit(ModelBase):
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-    # Relationships
-    clusters = db.relationship('FactoryCluster', backref='business_unit', lazy='dynamic')
+
 
 class LegalEntity(ModelBase):
     """
@@ -51,9 +50,7 @@ class FactoryCluster(ModelBase):
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-    # Relationships
-    plants = db.relationship('Plant', backref='factory_cluster', lazy='dynamic')
-    legal_entity = db.relationship('LegalEntity')
+
 
 class Plant(ModelBase):
     """

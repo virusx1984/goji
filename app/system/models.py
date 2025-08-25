@@ -16,5 +16,3 @@ class AuditLog(ModelBase):
     ip_address = db.Column(db.String(50))
     timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
-    # Relationship
-    user = db.relationship('User')

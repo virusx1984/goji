@@ -21,9 +21,6 @@ class Customer(ModelBase):
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-    # Relationships
-    locations = db.relationship('CustomerLocation', backref='customer', lazy='dynamic', cascade="all, delete-orphan")
-    products = db.relationship('Product', backref='customer', lazy='dynamic')
 
 class CustomerLocation(ModelBase):
     """
@@ -59,24 +56,7 @@ class Supplier(ModelBase):
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-    # Relationships
-    locations = db.relationship('SupplierLocation', backref='supplier', lazy='dynamic', cascade="all, delete-orphan")
 
-    # --- ADDED: Relationships for supplier-to-supplier connections ---
-    # Relationships where this supplier is the agent/subsidiary
-    manufacturers = db.relationship(
-        'SupplierRelationship', 
-        foreign_keys='SupplierRelationship.supplier_id',
-        backref='agent_supplier',
-        lazy='dynamic'
-    )
-    # Relationships where this supplier is the manufacturer/parent
-    agents = db.relationship(
-        'SupplierRelationship', 
-        foreign_keys='SupplierRelationship.mfg_id',
-        backref='manufacturer_supplier',
-        lazy='dynamic'
-    )
 
 class SupplierLocation(ModelBase):
     """
@@ -97,8 +77,6 @@ class SupplierLocation(ModelBase):
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-    # --- CHANGED: Relationship points to the correctly named 'MaterialSupplier' class ---
-    materials_supplied = db.relationship('MaterialSupplier', backref='supplier_location', lazy='dynamic', cascade="all, delete-orphan")
 
 # =============================================
 # Item & Resource Domain
@@ -144,8 +122,6 @@ class Material(ModelBase):
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-    # --- CHANGED: Relationship points to the correctly named 'MaterialSupplier' class ---
-    suppliers = db.relationship('MaterialSupplier', backref='material', lazy='dynamic', cascade="all, delete-orphan")
 
 class Operation(ModelBase):
     """
@@ -183,10 +159,7 @@ class Asset(ModelBase):
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-    # Relationships to match AssetSchema
-    asset_group = db.relationship('AssetGroup', backref='assets', lazy=True)
-    supplier_location = db.relationship('SupplierLocation', foreign_keys=[sup_loc_id], lazy=True)
-    manufacturer = db.relationship('Supplier', foreign_keys=[mfg_id], lazy=True)
+
 
 class AssetGroup(ModelBase):
     """
@@ -221,13 +194,6 @@ class WorkCenter(ModelBase):
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-    # Relationship for Work Centers and Assets (Many-to-Many)
-    assets = db.relationship(
-        'Asset', 
-        secondary='gj_work_center_assets', 
-        backref=db.backref('work_centers', lazy='dynamic'), 
-        lazy='dynamic'
-    )
 
 # --- Association Table for Work Centers and Assets ---
 work_center_assets = db.Table('gj_work_center_assets',

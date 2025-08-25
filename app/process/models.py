@@ -19,11 +19,7 @@ class Routing(ModelBase):
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     
-    # Relationships
-    product = db.relationship('Product')
-    plant = db.relationship('Plant')
-    operations = db.relationship('RoutingOperation', backref='routing', lazy='dynamic', cascade="all, delete-orphan")
-
+    
 class RoutingOperation(ModelBase):
     """Defines a single step in a Routing."""
     id = db.Column(db.Integer, primary_key=True)
@@ -42,12 +38,7 @@ class RoutingOperation(ModelBase):
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-    # Relationships
-    operation = db.relationship('Operation')
-    layer_definition = db.relationship('LayerDefinition')
-    resources = db.relationship('OperationResource', backref='routing_operation', lazy='dynamic', cascade="all, delete-orphan")
-    bom_items = db.relationship('BomItem', backref='routing_operation', lazy='dynamic', cascade="all, delete-orphan")
-
+    
 class LayerDefinition(ModelBase):
     """Master data for layer definitions (e.g., in PCB manufacturing)."""
     id = db.Column(db.Integer, primary_key=True)
@@ -72,11 +63,7 @@ class LayerStructure(ModelBase):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-    # Relationships
-    product = db.relationship('Product')
-    parent_layer = db.relationship('LayerDefinition', foreign_keys=[parent_layer_id])
-    child_layer = db.relationship('LayerDefinition', foreign_keys=[child_layer_id])
-
+    
 class OperationResource(ModelBase):
     """Links a routing operation to a work center with specific time standards."""
     id = db.Column(db.Integer, primary_key=True)
@@ -100,9 +87,7 @@ class OperationResource(ModelBase):
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-    # Relationship
-    work_center = db.relationship('WorkCenter')
-
+   
 
 
 class BomItem(ModelBase):
@@ -126,10 +111,7 @@ class BomItem(ModelBase):
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-    # Relationships
-    material = db.relationship('Material')
-    alternates = db.relationship('AlternateMaterial', backref='bom_item', lazy='dynamic', cascade="all, delete-orphan")
-
+    
 class AlternateMaterial(ModelBase):
     """Defines an alternative material for a BomItem."""
     id = db.Column(db.Integer, primary_key=True)
@@ -140,7 +122,4 @@ class AlternateMaterial(ModelBase):
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-    # Relationship
-    material = db.relationship('Material', foreign_keys=[alt_material_id])
-
-
+    

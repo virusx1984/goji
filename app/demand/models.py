@@ -17,10 +17,6 @@ class SalesOrder(ModelBase):
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-    # Relationships
-    customer = db.relationship('Customer')
-    ship_to_location = db.relationship('CustomerLocation')
-    lines = db.relationship('SalesOrderLine', backref='sales_order', lazy='dynamic', cascade="all, delete-orphan")
 
 class SalesOrderLine(ModelBase):
     """A single line item on a Sales Order."""
@@ -39,9 +35,6 @@ class SalesOrderLine(ModelBase):
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-    # Relationships
-    product = db.relationship('Product')
-    routing = db.relationship('Routing')
 
 class ForecastSet(ModelBase):
     """A set of forecasts, typically from a customer."""
@@ -57,9 +50,6 @@ class ForecastSet(ModelBase):
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-    # Relationships
-    customer = db.relationship('Customer')
-    lines = db.relationship('ForecastLine', backref='forecast_set', lazy='dynamic', cascade="all, delete-orphan")
 
 class ForecastLine(ModelBase):
     """A single line item in a Forecast Set."""
@@ -74,5 +64,3 @@ class ForecastLine(ModelBase):
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-    # Relationship
-    product = db.relationship('Product')
