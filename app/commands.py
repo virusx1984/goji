@@ -106,11 +106,14 @@ def seed_data_command():
 
     # --- Step 4: Create Core Master Data for HDI PCB ---
     # Customer
-    customer_apple = Customer(code='0AP', name='H客戶', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    db.session.add(customer_apple)
+    customer_apple = Customer(code='00001', name='H客戶', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    customer_byd = Customer(code='00002', name='比亞迪', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    customer_quanta = Customer(code='00003', name='廣達', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    db.session.add([customer_apple, customer_byd])
     db.session.commit()
-    
-    apple_location = CustomerLocation(cust_id=customer_apple.id, loc_name='Cupertino HQ', is_default=True, created_by_id=admin_user.id, updated_by_id=admin_user.id)
+
+    location_byd_sz = CustomerLocation(cust_id=customer_byd.id, loc_name='Shenzhen', is_default=True, created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    location_quanta_cq = CustomerLocation(cust_id=customer_byd.id, loc_name='Chongqing', is_default=True, created_by_id=admin_user.id, updated_by_id=admin_user.id)
 
     # Suppliers
     supplier_cu = Supplier(code='SUP-CUFOIL', name='Copper Foil Inc.', supplier_type='Manufacturer', created_by_id=admin_user.id, updated_by_id=admin_user.id)
