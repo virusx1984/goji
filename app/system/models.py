@@ -11,8 +11,8 @@ class AuditLog(ModelBase):
     action_type = db.Column(db.String(50), nullable=False) # e.g., 'CREATE', 'UPDATE', 'DELETE'
     table_name = db.Column(db.String(100))
     record_id = db.Column(db.Integer)
-    before_value = db.Column(JSONB)
-    after_value = db.Column(JSONB)
+    before_value = db.Column(db.Text)  # CHANGED: from JSONB to Text
+    after_value = db.Column(db.Text)   # CHANGED: from JSONB to Text
     ip_address = db.Column(db.String(50))
-    timestamp = db.Column(db.DateTime, nullablpe=False, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 

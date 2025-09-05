@@ -106,19 +106,23 @@ def seed_data_command():
 
     # --- Step 4: Create Core Master Data for HDI PCB ---
     # Customer
-    customer_apple = Customer(code='00001', name='H客戶', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    customer_byd = Customer(code='00002', name='比亞迪', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    customer_quanta = Customer(code='00003', name='廣達', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    customer_apple = Customer(code='0001', name='H客戶', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    customer_byd = Customer(code='0002', name='比亞迪', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    customer_quanta = Customer(code='0003', name='廣達', created_by_id=admin_user.id, updated_by_id=admin_user.id)
     db.session.add([customer_apple, customer_byd])
     db.session.commit()
 
     location_byd_sz = CustomerLocation(cust_id=customer_byd.id, loc_name='Shenzhen', is_default=True, created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    location_quanta_cq = CustomerLocation(cust_id=customer_byd.id, loc_name='Chongqing', is_default=True, created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    location_quanta_cq = CustomerLocation(cust_id=customer_quanta.id, loc_name='Chongqing', is_default=True, created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    db.session.add([location_byd_sz, location_quanta_cq])
+    db.session.commit()
 
     # Suppliers
-    supplier_cu = Supplier(code='SUP-CUFOIL', name='Copper Foil Inc.', supplier_type='Manufacturer', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    supplier_tmc = Supplier(code='0001', name='台光', supplier_type='Manufacturer', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    supplier_tcf = Supplier(code='0002', name='台湾铜箔', supplier_type='Manufacturer', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    
     supplier_fr4 = Supplier(code='SUP-FR4', name='FR4 Materials Co.', supplier_type='Manufacturer', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    db.session.add_all([supplier_cu, supplier_fr4])
+    db.session.add_all([supplier_tmc, supplier_fr4])
     db.session.commit()
     
     cu_location = SupplierLocation(supplier_id=supplier_cu.id, loc_name='Main Factory', is_default=True, created_by_id=admin_user.id, updated_by_id=admin_user.id)
