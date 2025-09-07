@@ -117,23 +117,95 @@ def seed_data_command():
     db.session.add([location_byd_sz, location_quanta_cq])
     db.session.commit()
 
+    # HDI PCB Product
+    product_ap1301 = Product(cust_id=customer_apple.id, cust_part_num='820-03902-A', cust_ver='', 
+                              description='6-Layer HDI PCB for A12 Chip', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+
     # Suppliers
     supplier_tmc = Supplier(code='0001', name='台光', supplier_type='Manufacturer', created_by_id=admin_user.id, updated_by_id=admin_user.id)
     supplier_tcf = Supplier(code='0002', name='台湾铜箔', supplier_type='Manufacturer', created_by_id=admin_user.id, updated_by_id=admin_user.id)
     
-    supplier_fr4 = Supplier(code='SUP-FR4', name='FR4 Materials Co.', supplier_type='Manufacturer', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    db.session.add_all([supplier_tmc, supplier_fr4])
+    db.session.add_all([supplier_tmc, supplier_tcf])
     db.session.commit()
     
-    cu_location = SupplierLocation(supplier_id=supplier_cu.id, loc_name='Main Factory', is_default=True, created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    fr4_location = SupplierLocation(supplier_id=supplier_fr4.id, loc_name='Production Hub', is_default=True, created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    ccl_location = SupplierLocation(supplier_id=supplier_tmc.id, loc_name='中山', is_default=True, created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    cu_location = SupplierLocation(supplier_id=supplier_tcf.id, loc_name='台北', is_default=True, created_by_id=admin_user.id, updated_by_id=admin_user.id)
+
+    db.session.add_all([ccl_location, cu_location])
+    db.session.commit()
 
     # Operations
-    op_imaging = Operation(code='OP-10', name='LDI Imaging', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_etching = Operation(code='OP-20', name='Copper Etching', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_lamination = Operation(code='OP-30', name='Multi-layer Lamination', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_drilling = Operation(code='OP-40', name='Laser Drilling', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_plating = Operation(code='OP-50', name='Copper Plating', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_cutting = Operation(code='0001', name='裁板', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_layer_pre_treatment = Operation(code='0002', name='线路前处理', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_ldi = Operation(code='0003', name='LDI', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_des = Operation(code='0004', name='DES', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_aoi = Operation(code='0005', name='AOI', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_vrs = Operation(code='0006', name='VRS', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_brown_oxide = Operation(code='0007', name='棕化', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_layup = Operation(code='0008', name='叠板', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_lamination = Operation(code='0009', name='压合', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_x_ray = Operation(code='0010', name='X-Ray钻靶', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_lam_post_treatment = Operation(code='0011', name='压合后处理', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_black_oxide = Operation(code='0012', name='黑化', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_laser_drilling = Operation(code='0013', name='镭射钻孔', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_plasma = Operation(code='0014', name='Plasma', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_mechanical_drilling = Operation(code='0015', name='机械钻孔', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_plating_pre_treatment = Operation(code='0016', name='电镀前处理', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_horizontal_plating = Operation(code='0017', name='水平电镀', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_vcp = Operation(code='0018', name='VCP电镀', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_sm_pre_treatment = Operation(code='0019', name='防焊前处理', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_printing = Operation(code='0020', name='印刷', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_di = Operation(code='0021', name='DI曝光', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_sm_developing = Operation(code='0022', name='防焊显影', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_sm_post_baking = Operation(code='0023', name='防焊后烤', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_enig_pre_treatment = Operation(code='0024', name='化金前处理', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_enig_lamination = Operation(code='0025', name='化金压膜', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_enig_exposure = Operation(code='0026', name='化金曝光', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_enig = Operation(code='0027', name='浸镍金', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_enig_developing = Operation(code='0028', name='化金显影', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_enig_striping = Operation(code='0029', name='化金去膜', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_routing = Operation(code='0030', name='捞型', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_4w_testing = Operation(code='0031', name='四线测试', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_avi = Operation(code='0032', name='AVI检查', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    op_packing = Operation(code='0033', name='包装', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+
+    db.session.add_all([
+        op_cutting,
+        op_layer_pre_treatment,
+        op_ldi,
+        op_des,
+        op_aoi,
+        op_vrs,
+        op_brown_oxide,
+        op_layup,
+        op_lamination,
+        op_x_ray,
+        op_lam_post_treatment,
+        op_black_oxide,
+        op_laser_drilling,
+        op_plasma,
+        op_mechanical_drilling,
+        op_plating_pre_treatment,
+        op_horizontal_plating,
+        op_vcp,
+        op_sm_pre_treatment,
+        op_printing,
+        op_di,
+        op_sm_developing,
+        op_sm_post_baking,
+        op_enig_pre_treatment,
+        op_enig_lamination,
+        op_enig_exposure,
+        op_enig,
+        op_enig_developing,
+        op_enig_striping,
+        op_routing,
+        op_4w_testing,
+        op_avi,
+        op_packing
+    ])
+    db.session.commit()
+    
     
     # Work Centers
     wc_imaging = WorkCenter(plant_id=default_plant.id, name='LDI Imaging Line', daily_avail_sec=28800, oee_pct=0.85, created_by_id=admin_user.id, updated_by_id=admin_user.id)
@@ -148,9 +220,7 @@ def seed_data_command():
     mat_prepreg = Material(part_num='RAW-PP-1080', material_type='RAW', name='1080 Prepreg', uom='SQMT', created_by_id=admin_user.id, updated_by_id=admin_user.id)
     mat_chemicals = Material(part_num='RAW-CHEM-ETCH', material_type='RAW', name='Etching Chemicals', uom='L', created_by_id=admin_user.id, updated_by_id=admin_user.id)
     
-    # HDI PCB Product
-    product_hdi_pcb = Product(cust_id=customer_apple.id, cust_part_num='A12-HDI-6L', cust_ver='B', 
-                             description='6-Layer HDI PCB for A12 Chip', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    
     
     db.session.add_all([apple_location, cu_location, fr4_location, op_imaging, op_etching, op_lamination, 
                        op_drilling, op_plating, wc_imaging, wc_etching, wc_lamination, wc_drilling, 

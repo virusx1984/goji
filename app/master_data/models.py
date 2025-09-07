@@ -92,7 +92,6 @@ class Product(ModelBase):
     ref_product_id = db.Column(db.Integer, db.ForeignKey('gj_products.id'), nullable=True)
     cust_id = db.Column(db.Integer, db.ForeignKey('gj_customers.id'), nullable=False)
     cust_part_num = db.Column(db.String(100), nullable=False, index=True)
-    cust_ver = db.Column(db.String(50), nullable=False)
     description = db.Column(db.String(500))
     pcs_per_strip = db.Column(db.Integer)
     strips_per_panel = db.Column(db.Integer)
