@@ -10,6 +10,9 @@ class Config:
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'a-very-secure-and-long-secret-key-that-you-must-change')
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=8)
 
+    # Set a unique name for the migration version table for this project.
+    MIGRATE_VERSION_TABLE = 'goji_alembic_version'
+
 class DevelopmentConfig(Config):
     """Development configuration."""
     DEBUG = True

@@ -101,6 +101,14 @@ def run_migrations_online():
         context.configure(
             connection=connection,
             target_metadata=get_metadata(),
+            
+            # --- START: THIS IS THE CRITICAL MODIFICATION ---
+            # Forcefully pass the version table name directly from the Flask app config.
+            # This ensures that the correct table name is used, bypassing any
+            # potential issues in the config handoff between Flask-Migrate and Alembic.
+            version_table=current_app.config.get('MIGRATE_VERSION_TABLE'),
+            # --- END: THIS IS THE CRITICAL MODIFICATION ---
+
             **conf_args
         )
 

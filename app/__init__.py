@@ -1,17 +1,37 @@
 # goji/app/__init__.py
 from flask import Flask
-from config import DevelopmentConfig
-
+import config
 from .extensions import db, migrate, bcrypt, jwt, cors, ma
+from .commands import seed_data_command
 
-def create_app(config_class=DevelopmentConfig):
+# A dictionary to map configuration names (strings) to their corresponding classes.
+# This allows the factory to be called with a string name like 'development'.
+config_by_name = {
+    'development': config.DevelopmentConfig,
+    # 'production': config.ProductionConfig, # Uncomment when you create a ProductionConfig
+}
+
+def create_app(config_name='development'):
     """
     Application factory function to create and configure the Flask app.
+    This function is the main entry point for creating the application instance.
+
+    Args:
+        config_name (str): The name of the configuration to use (e.g., 'development').
     """
     app = Flask(__name__)
-    app.config.from_object(config_class)
 
-    # Initialize extensions
+    # --- Step 1: Load Configuration ---
+    # Look up the configuration class from the dictionary and load it.
+    # This is the most critical step to ensure all settings, including
+    # MIGRATE_VERSION_TABLE, are loaded before extensions are initialized.
+    config_object = config_by_name.get(config_name, config.DevelopmentConfig)
+    app.config.from_object(config_object)
+
+    print(f"DEBUG: MIGRATE_VERSION_TABLE is set to: {app.config.get('MIGRATE_VERSION_TABLE')}")
+
+    # --- Step 2: Initialize Extensions ---
+    # Pass the fully configured app object to each extension's init_app method.
     db.init_app(app)
     migrate.init_app(app, db)
     bcrypt.init_app(app)
@@ -19,26 +39,23 @@ def create_app(config_class=DevelopmentConfig):
     cors.init_app(app, resources={r"/api/*": {"origins": "*"}})
     ma.init_app(app)
 
-    # --- CHANGE: Import blueprints directly from the 'routes.py' file of each module ---
+    # --- Step 3: Register Blueprints ---
+    # Import blueprints inside the factory to prevent circular import issues.
     from .apis.auth import bp as auth_bp
-    from .master_data.routes import bp as master_data_bp
     from .user_management.routes import bp as user_management_bp
     from .organization.routes import bp as organization_bp
+    from .master_data.routes import bp as master_data_bp
     from .process.routes import bp as process_bp
     from .demand.routes import bp as demand_bp
 
-    
-    # Register all blueprints
     app.register_blueprint(auth_bp)
-    app.register_blueprint(master_data_bp)
     app.register_blueprint(user_management_bp)
     app.register_blueprint(organization_bp)
+    app.register_blueprint(master_data_bp)
     app.register_blueprint(process_bp)
     app.register_blueprint(demand_bp)
-    
 
-    # Import and register custom CLI commands
-    from .commands import seed_data_command
-    app.cli.add_command(seed_data_command, "seed")
+    # --- Step 4: Register Custom CLI Commands ---
+    app.cli.add_command(seed_data_command)
 
     return app
