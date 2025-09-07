@@ -17,7 +17,7 @@ class DevelopmentConfig(Config):
     # Database connection details from environment variables with defaults
     DB_USER = os.environ.get('DB_USER', 'lining')
     DB_PASSWORD = os.environ.get('DB_PASSWORD', '111111')
-    DB_HOST = os.environ.get('DB_HOST', '192.168.3.194')
+    DB_HOST = os.environ.get('DB_HOST', 'server01.home.net')
     DB_PORT = os.environ.get('DB_PORT', '5432')
     DB_NAME = os.environ.get('DB_NAME', 'gojidb')
     
