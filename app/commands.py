@@ -2,6 +2,9 @@
 from flask.cli import with_appcontext
 import click
 from datetime import datetime, date
+from sqlalchemy import text
+import os
+from flask import current_app
 
 from .extensions import db
 
@@ -12,6 +15,83 @@ from .master_data.models import *
 from .process.models import *
 from .demand.models import *
 from .system.models import *
+
+@click.command(name='empty-db')
+@with_appcontext
+def empty_db_command():
+    """
+    Drops all application tables, the migration version table, and recreates the schema.
+    This is a highly destructive command, ideal for development.
+    """
+    if not click.confirm("WARNING: This will drop all tables (including migration history), losing all data. Continue?"):
+        print("Operation cancelled.")
+        return
+    
+    # --- Step 1: Drop all application tables ---
+    print("Dropping all application tables (known to SQLAlchemy)...")
+    db.drop_all()
+    print("Application tables dropped.")
+
+    # --- Step 2: Manually drop the migration version table (with dialect-specific SQL) ---
+    print("Dropping the migration version table...")
+    version_table = current_app.config.get('MIGRATE_VERSION_TABLE')
+    
+    if version_table:
+        dialect = db.engine.dialect.name
+        print(f"Current database dialect: {dialect}")
+
+        with db.engine.connect() as connection:
+            with connection.begin():
+                if dialect == 'postgresql':
+                    # PostgreSQL-specific command
+                    print(f"Executing PostgreSQL command: DROP TABLE IF EXISTS {version_table}")
+                    connection.execute(text(f'DROP TABLE IF EXISTS "{version_table}";'))
+                
+                elif dialect == 'oracle':
+                    # Oracle-specific PL/SQL block to handle "drop if exists"
+                    print(f"Executing Oracle PL/SQL to drop table {version_table} if it exists.")
+                    oracle_sql = text(f"""
+                    BEGIN
+                       EXECUTE IMMEDIATE 'DROP TABLE "{version_table}"';
+                    EXCEPTION
+                       WHEN OTHERS THEN
+                          IF SQLCODE != -942 THEN
+                             RAISE;
+                          END IF;
+                    END;
+                    """)
+                    connection.execute(oracle_sql)
+
+        print(f"Migration version table '{version_table}' dropped or did not exist.")
+    else:
+        print("MIGRATE_VERSION_TABLE not found in config, skipping.")
+
+    # --- Step 3: Clean migration script files ---
+    print("\nStarting migration script cleanup...")
+    
+    project_root = os.path.abspath(os.path.join(current_app.root_path, '..'))
+    versions_dir = os.path.join(project_root, 'migrations', 'versions')
+
+    if os.path.isdir(versions_dir):
+        files_to_remove = [f for f in os.listdir(versions_dir) if f.endswith('.py') and f != '__init__.py']
+        
+        if not files_to_remove:
+            print("No migration scripts found to remove.")
+        else:
+            for filename in files_to_remove:
+                file_path = os.path.join(versions_dir, filename)
+                try:
+                    os.remove(file_path)
+                    print(f"   - Removed migration file: {filename}")
+                except OSError as e:
+                    print(f"   - Error removing file {filename}: {e}")
+            print("Migration script cleanup complete.")
+    else:
+        print("Migration 'versions' directory not found, skipping cleanup.")
+
+    print("Database has been completely emptied")
+
+
 
 @click.command(name='seed')
 @with_appcontext
@@ -117,231 +197,231 @@ def seed_data_command():
     db.session.add([location_byd_sz, location_quanta_cq])
     db.session.commit()
 
-    # HDI PCB Product
-    product_820_03902_A = Product(cust_id=customer_apple.id, end_cust_id = customer_apple.id, cust_part_num='820-03902-A',
-                              description='3阶10层板', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # # HDI PCB Product
+    # product_820_03902_A = Product(cust_id=customer_apple.id, end_cust_id = customer_apple.id, cust_part_num='820-03902-A',
+    #                           description='3阶10层板', created_by_id=admin_user.id, updated_by_id=admin_user.id)
     
 
-    # layer definition
-    layer_def_0 = LayerDefinition(layer_code='0', layer_name='外层', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    layer_def_34 = LayerDefinition(layer_code='34', layer_name='L04~05', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    layer_def_36 = LayerDefinition(layer_code='36', layer_name='L06~07', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    layer_def_143 = LayerDefinition(layer_code='143', layer_name='L03~08', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    layer_def_191 = LayerDefinition(layer_code='191', layer_name='L02~09', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # # layer definition
+    # layer_def_0 = LayerDefinition(layer_code='0', layer_name='外层', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # layer_def_34 = LayerDefinition(layer_code='34', layer_name='L04~05', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # layer_def_36 = LayerDefinition(layer_code='36', layer_name='L06~07', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # layer_def_143 = LayerDefinition(layer_code='143', layer_name='L03~08', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # layer_def_191 = LayerDefinition(layer_code='191', layer_name='L02~09', created_by_id=admin_user.id, updated_by_id=admin_user.id)
 
-    db.session.add([layer_def_0, layer_def_34, layer_def_36, layer_def_143, layer_def_191])
-    db.session.commit()
+    # db.session.add([layer_def_0, layer_def_34, layer_def_36, layer_def_143, layer_def_191])
+    # db.session.commit()
 
-    # layer structures
-    layer_struct_ = LayerStructure()
+    # # layer structures
+    # layer_struct_ = LayerStructure()
 
 
-    # Suppliers
-    supplier_tmc = Supplier(code='0001', name='台光', supplier_type='Manufacturer', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    supplier_tcf = Supplier(code='0002', name='台湾铜箔', supplier_type='Manufacturer', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # # Suppliers
+    # supplier_tmc = Supplier(code='0001', name='台光', supplier_type='Manufacturer', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # supplier_tcf = Supplier(code='0002', name='台湾铜箔', supplier_type='Manufacturer', created_by_id=admin_user.id, updated_by_id=admin_user.id)
     
-    db.session.add_all([supplier_tmc, supplier_tcf])
-    db.session.commit()
+    # db.session.add_all([supplier_tmc, supplier_tcf])
+    # db.session.commit()
     
-    ccl_location = SupplierLocation(supplier_id=supplier_tmc.id, loc_name='中山', is_default=True, created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    cu_location = SupplierLocation(supplier_id=supplier_tcf.id, loc_name='台北', is_default=True, created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # ccl_location = SupplierLocation(supplier_id=supplier_tmc.id, loc_name='中山', is_default=True, created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # cu_location = SupplierLocation(supplier_id=supplier_tcf.id, loc_name='台北', is_default=True, created_by_id=admin_user.id, updated_by_id=admin_user.id)
 
-    db.session.add_all([ccl_location, cu_location])
-    db.session.commit()
+    # db.session.add_all([ccl_location, cu_location])
+    # db.session.commit()
 
-    # Operations
-    op_cutting = Operation(code='0001', name='裁板', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_layer_pre_treatment = Operation(code='0002', name='线路前处理', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_ldi = Operation(code='0003', name='LDI', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_des = Operation(code='0004', name='DES', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_aoi = Operation(code='0005', name='AOI', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_vrs = Operation(code='0006', name='VRS', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_brown_oxide = Operation(code='0007', name='棕化', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_layup = Operation(code='0008', name='叠板', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_lamination = Operation(code='0009', name='压合', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_x_ray = Operation(code='0010', name='X-Ray钻靶', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_lam_post_treatment = Operation(code='0011', name='压合后处理', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_black_oxide = Operation(code='0012', name='黑化', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_laser_drilling = Operation(code='0013', name='镭射钻孔', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_plasma = Operation(code='0014', name='Plasma', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_mechanical_drilling = Operation(code='0015', name='机械钻孔', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_plating_pre_treatment = Operation(code='0016', name='电镀前处理', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_horizontal_plating = Operation(code='0017', name='水平电镀', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_vcp = Operation(code='0018', name='VCP电镀', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_sm_pre_treatment = Operation(code='0019', name='防焊前处理', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_printing = Operation(code='0020', name='印刷', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_di = Operation(code='0021', name='DI曝光', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_sm_developing = Operation(code='0022', name='防焊显影', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_sm_post_baking = Operation(code='0023', name='防焊后烤', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_enig_pre_treatment = Operation(code='0024', name='化金前处理', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_enig_lamination = Operation(code='0025', name='化金压膜', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_enig_exposure = Operation(code='0026', name='化金曝光', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_enig = Operation(code='0027', name='浸镍金', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_enig_developing = Operation(code='0028', name='化金显影', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_enig_striping = Operation(code='0029', name='化金去膜', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_routing = Operation(code='0030', name='捞型', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_4w_testing = Operation(code='0031', name='四线测试', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_avi = Operation(code='0032', name='AVI检查', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    op_packing = Operation(code='0033', name='包装', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # # Operations
+    # op_cutting = Operation(code='0001', name='裁板', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_layer_pre_treatment = Operation(code='0002', name='线路前处理', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_ldi = Operation(code='0003', name='LDI', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_des = Operation(code='0004', name='DES', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_aoi = Operation(code='0005', name='AOI', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_vrs = Operation(code='0006', name='VRS', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_brown_oxide = Operation(code='0007', name='棕化', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_layup = Operation(code='0008', name='叠板', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_lamination = Operation(code='0009', name='压合', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_x_ray = Operation(code='0010', name='X-Ray钻靶', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_lam_post_treatment = Operation(code='0011', name='压合后处理', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_black_oxide = Operation(code='0012', name='黑化', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_laser_drilling = Operation(code='0013', name='镭射钻孔', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_plasma = Operation(code='0014', name='Plasma', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_mechanical_drilling = Operation(code='0015', name='机械钻孔', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_plating_pre_treatment = Operation(code='0016', name='电镀前处理', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_horizontal_plating = Operation(code='0017', name='水平电镀', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_vcp = Operation(code='0018', name='VCP电镀', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_sm_pre_treatment = Operation(code='0019', name='防焊前处理', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_printing = Operation(code='0020', name='印刷', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_di = Operation(code='0021', name='DI曝光', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_sm_developing = Operation(code='0022', name='防焊显影', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_sm_post_baking = Operation(code='0023', name='防焊后烤', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_enig_pre_treatment = Operation(code='0024', name='化金前处理', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_enig_lamination = Operation(code='0025', name='化金压膜', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_enig_exposure = Operation(code='0026', name='化金曝光', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_enig = Operation(code='0027', name='浸镍金', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_enig_developing = Operation(code='0028', name='化金显影', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_enig_striping = Operation(code='0029', name='化金去膜', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_routing = Operation(code='0030', name='捞型', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_4w_testing = Operation(code='0031', name='四线测试', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_avi = Operation(code='0032', name='AVI检查', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # op_packing = Operation(code='0033', name='包装', created_by_id=admin_user.id, updated_by_id=admin_user.id)
 
-    db.session.add_all([
-        op_cutting,
-        op_layer_pre_treatment,
-        op_ldi,
-        op_des,
-        op_aoi,
-        op_vrs,
-        op_brown_oxide,
-        op_layup,
-        op_lamination,
-        op_x_ray,
-        op_lam_post_treatment,
-        op_black_oxide,
-        op_laser_drilling,
-        op_plasma,
-        op_mechanical_drilling,
-        op_plating_pre_treatment,
-        op_horizontal_plating,
-        op_vcp,
-        op_sm_pre_treatment,
-        op_printing,
-        op_di,
-        op_sm_developing,
-        op_sm_post_baking,
-        op_enig_pre_treatment,
-        op_enig_lamination,
-        op_enig_exposure,
-        op_enig,
-        op_enig_developing,
-        op_enig_striping,
-        op_routing,
-        op_4w_testing,
-        op_avi,
-        op_packing
-    ])
-    db.session.commit()
-    
-    
-    # Work Centers
-    wc_imaging = WorkCenter(plant_id=default_plant.id, name='LDI Imaging Line', daily_avail_sec=28800, oee_pct=0.85, created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    wc_etching = WorkCenter(plant_id=default_plant.id, name='Etching Department', daily_avail_sec=25200, oee_pct=0.80, created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    wc_lamination = WorkCenter(plant_id=default_plant.id, name='Lamination Press', daily_avail_sec=21600, oee_pct=0.75, created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    wc_drilling = WorkCenter(plant_id=default_plant.id, name='Laser Drill Center', daily_avail_sec=32400, oee_pct=0.90, created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    wc_plating = WorkCenter(plant_id=default_plant.id, name='Plating Line', daily_avail_sec=28800, oee_pct=0.82, created_by_id=admin_user.id, updated_by_id=admin_user.id)
-
-    # Materials
-    mat_cu_foil = Material(part_num='RAW-CU-18UM', material_type='RAW', name='18Î¼m Copper Foil', uom='SQMT', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    mat_fr4 = Material(part_num='RAW-FR4-0.2', material_type='RAW', name='FR4 0.2mm Core', uom='SQMT', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    mat_prepreg = Material(part_num='RAW-PP-1080', material_type='RAW', name='1080 Prepreg', uom='SQMT', created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    mat_chemicals = Material(part_num='RAW-CHEM-ETCH', material_type='RAW', name='Etching Chemicals', uom='L', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # db.session.add_all([
+    #     op_cutting,
+    #     op_layer_pre_treatment,
+    #     op_ldi,
+    #     op_des,
+    #     op_aoi,
+    #     op_vrs,
+    #     op_brown_oxide,
+    #     op_layup,
+    #     op_lamination,
+    #     op_x_ray,
+    #     op_lam_post_treatment,
+    #     op_black_oxide,
+    #     op_laser_drilling,
+    #     op_plasma,
+    #     op_mechanical_drilling,
+    #     op_plating_pre_treatment,
+    #     op_horizontal_plating,
+    #     op_vcp,
+    #     op_sm_pre_treatment,
+    #     op_printing,
+    #     op_di,
+    #     op_sm_developing,
+    #     op_sm_post_baking,
+    #     op_enig_pre_treatment,
+    #     op_enig_lamination,
+    #     op_enig_exposure,
+    #     op_enig,
+    #     op_enig_developing,
+    #     op_enig_striping,
+    #     op_routing,
+    #     op_4w_testing,
+    #     op_avi,
+    #     op_packing
+    # ])
+    # db.session.commit()
     
     
+    # # Work Centers
+    # wc_imaging = WorkCenter(plant_id=default_plant.id, name='LDI Imaging Line', daily_avail_sec=28800, oee_pct=0.85, created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # wc_etching = WorkCenter(plant_id=default_plant.id, name='Etching Department', daily_avail_sec=25200, oee_pct=0.80, created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # wc_lamination = WorkCenter(plant_id=default_plant.id, name='Lamination Press', daily_avail_sec=21600, oee_pct=0.75, created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # wc_drilling = WorkCenter(plant_id=default_plant.id, name='Laser Drill Center', daily_avail_sec=32400, oee_pct=0.90, created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # wc_plating = WorkCenter(plant_id=default_plant.id, name='Plating Line', daily_avail_sec=28800, oee_pct=0.82, created_by_id=admin_user.id, updated_by_id=admin_user.id)
+
+    # # Materials
+    # mat_cu_foil = Material(part_num='RAW-CU-18UM', material_type='RAW', name='18Î¼m Copper Foil', uom='SQMT', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # mat_fr4 = Material(part_num='RAW-FR4-0.2', material_type='RAW', name='FR4 0.2mm Core', uom='SQMT', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # mat_prepreg = Material(part_num='RAW-PP-1080', material_type='RAW', name='1080 Prepreg', uom='SQMT', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # mat_chemicals = Material(part_num='RAW-CHEM-ETCH', material_type='RAW', name='Etching Chemicals', uom='L', created_by_id=admin_user.id, updated_by_id=admin_user.id)
     
-    db.session.add_all([apple_location, cu_location, fr4_location, op_imaging, op_etching, op_lamination, 
-                       op_drilling, op_plating, wc_imaging, wc_etching, wc_lamination, wc_drilling, 
-                       wc_plating, mat_cu_foil, mat_fr4, mat_prepreg, mat_chemicals, product_hdi_pcb])
-    db.session.commit()
+    
+    
+    # db.session.add_all([apple_location, cu_location, fr4_location, op_imaging, op_etching, op_lamination, 
+    #                    op_drilling, op_plating, wc_imaging, wc_etching, wc_lamination, wc_drilling, 
+    #                    wc_plating, mat_cu_foil, mat_fr4, mat_prepreg, mat_chemicals, product_hdi_pcb])
+    # db.session.commit()
 
-    # --- Step 5: Create HDI PCB Process Data (Routing) ---
-    routing_hdi = Routing(product_id=product_hdi_pcb.id, plant_id=default_plant.id, int_part_num='HDI-6L-A12', 
-                         int_ver='B', is_default=True, created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    db.session.add(routing_hdi)
-    db.session.commit()
+    # # --- Step 5: Create HDI PCB Process Data (Routing) ---
+    # routing_hdi = Routing(product_id=product_hdi_pcb.id, plant_id=default_plant.id, int_part_num='HDI-6L-A12', 
+    #                      int_ver='B', is_default=True, created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # db.session.add(routing_hdi)
+    # db.session.commit()
 
-    # Step 10: LDI Imaging
-    ro_10 = RoutingOperation(routing_id=routing_hdi.id, operation_id=op_imaging.id, step_num=10, 
-                            created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    db.session.add(ro_10)
-    db.session.commit()
-    res_10 = OperationResource(routing_op_id=ro_10.id, wc_id=wc_imaging.id, 
-                              run_time_sec_per_pc=120,
-                              raw_run_time_val=2.0,          # 2.0 minutes per panel
-                              raw_run_time_uom='min/panel',  # Original measurement unit
-                              items_per_raw_uom=1,           # 1 panel per measurement
-                              created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # # Step 10: LDI Imaging
+    # ro_10 = RoutingOperation(routing_id=routing_hdi.id, operation_id=op_imaging.id, step_num=10, 
+    #                         created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # db.session.add(ro_10)
+    # db.session.commit()
+    # res_10 = OperationResource(routing_op_id=ro_10.id, wc_id=wc_imaging.id, 
+    #                           run_time_sec_per_pc=120,
+    #                           raw_run_time_val=2.0,          # 2.0 minutes per panel
+    #                           raw_run_time_uom='min/panel',  # Original measurement unit
+    #                           items_per_raw_uom=1,           # 1 panel per measurement
+    #                           created_by_id=admin_user.id, updated_by_id=admin_user.id)
 
-    # Step 20: Copper Etching
-    ro_20 = RoutingOperation(routing_id=routing_hdi.id, operation_id=op_etching.id, step_num=20, 
-                            created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    db.session.add(ro_20)
-    db.session.commit()
-    res_20 = OperationResource(routing_op_id=ro_20.id, wc_id=wc_etching.id, 
-                              run_time_sec_per_pc=180,
-                              raw_run_time_val=3.0,          # 3.0 minutes per panel
-                              raw_run_time_uom='min/panel',  # Original measurement unit
-                              items_per_raw_uom=1,           # 1 panel per measurement
-                              created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # # Step 20: Copper Etching
+    # ro_20 = RoutingOperation(routing_id=routing_hdi.id, operation_id=op_etching.id, step_num=20, 
+    #                         created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # db.session.add(ro_20)
+    # db.session.commit()
+    # res_20 = OperationResource(routing_op_id=ro_20.id, wc_id=wc_etching.id, 
+    #                           run_time_sec_per_pc=180,
+    #                           raw_run_time_val=3.0,          # 3.0 minutes per panel
+    #                           raw_run_time_uom='min/panel',  # Original measurement unit
+    #                           items_per_raw_uom=1,           # 1 panel per measurement
+    #                           created_by_id=admin_user.id, updated_by_id=admin_user.id)
 
-    # Step 30: Multi-layer Lamination
-    ro_30 = RoutingOperation(routing_id=routing_hdi.id, operation_id=op_lamination.id, step_num=30, 
-                            created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    db.session.add(ro_30)
-    db.session.commit()
-    res_30 = OperationResource(routing_op_id=ro_30.id, wc_id=wc_lamination.id, 
-                              run_time_sec_per_pc=900,
-                              raw_run_time_val=15.0,         # 15.0 minutes per panel
-                              raw_run_time_uom='min/panel',  # Original measurement unit
-                              items_per_raw_uom=1,           # 1 panel per measurement
-                              created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # # Step 30: Multi-layer Lamination
+    # ro_30 = RoutingOperation(routing_id=routing_hdi.id, operation_id=op_lamination.id, step_num=30, 
+    #                         created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # db.session.add(ro_30)
+    # db.session.commit()
+    # res_30 = OperationResource(routing_op_id=ro_30.id, wc_id=wc_lamination.id, 
+    #                           run_time_sec_per_pc=900,
+    #                           raw_run_time_val=15.0,         # 15.0 minutes per panel
+    #                           raw_run_time_uom='min/panel',  # Original measurement unit
+    #                           items_per_raw_uom=1,           # 1 panel per measurement
+    #                           created_by_id=admin_user.id, updated_by_id=admin_user.id)
 
-    # Step 40: Laser Drilling
-    ro_40 = RoutingOperation(routing_id=routing_hdi.id, operation_id=op_drilling.id, step_num=40, 
-                            created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    db.session.add(ro_40)
-    db.session.commit()
-    res_40 = OperationResource(routing_op_id=ro_40.id, wc_id=wc_drilling.id, 
-                              run_time_sec_per_pc=300,
-                              raw_run_time_val=5.0,          # 5.0 minutes per panel
-                              raw_run_time_uom='min/panel',  # Original measurement unit
-                              items_per_raw_uom=1,           # 1 panel per measurement
-                              created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # # Step 40: Laser Drilling
+    # ro_40 = RoutingOperation(routing_id=routing_hdi.id, operation_id=op_drilling.id, step_num=40, 
+    #                         created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # db.session.add(ro_40)
+    # db.session.commit()
+    # res_40 = OperationResource(routing_op_id=ro_40.id, wc_id=wc_drilling.id, 
+    #                           run_time_sec_per_pc=300,
+    #                           raw_run_time_val=5.0,          # 5.0 minutes per panel
+    #                           raw_run_time_uom='min/panel',  # Original measurement unit
+    #                           items_per_raw_uom=1,           # 1 panel per measurement
+    #                           created_by_id=admin_user.id, updated_by_id=admin_user.id)
 
-    # Step 50: Copper Plating
-    ro_50 = RoutingOperation(routing_id=routing_hdi.id, operation_id=op_plating.id, step_num=50, 
-                            created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    db.session.add(ro_50)
-    db.session.commit()
-    res_50 = OperationResource(routing_op_id=ro_50.id, wc_id=wc_plating.id, 
-                              run_time_sec_per_pc=480,
-                              raw_run_time_val=8.0,          # 8.0 minutes per panel
-                              raw_run_time_uom='min/panel',  # Original measurement unit
-                              items_per_raw_uom=1,           # 1 panel per measurement
-                              created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # # Step 50: Copper Plating
+    # ro_50 = RoutingOperation(routing_id=routing_hdi.id, operation_id=op_plating.id, step_num=50, 
+    #                         created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # db.session.add(ro_50)
+    # db.session.commit()
+    # res_50 = OperationResource(routing_op_id=ro_50.id, wc_id=wc_plating.id, 
+    #                           run_time_sec_per_pc=480,
+    #                           raw_run_time_val=8.0,          # 8.0 minutes per panel
+    #                           raw_run_time_uom='min/panel',  # Original measurement unit
+    #                           items_per_raw_uom=1,           # 1 panel per measurement
+    #                           created_by_id=admin_user.id, updated_by_id=admin_user.id)
 
-    # BOM Items with new calculation fields
-    bom_10 = BomItem(routing_op_id=ro_10.id, material_id=mat_cu_foil.id, quantity=0.8, uom='SQMT',
-                    base_qty=1, base_uom='panel', multiplier=1, scrap_pct=0.08,  # 8% scrap for imaging
-                    created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # # BOM Items with new calculation fields
+    # bom_10 = BomItem(routing_op_id=ro_10.id, material_id=mat_cu_foil.id, quantity=0.8, uom='SQMT',
+    #                 base_qty=1, base_uom='panel', multiplier=1, scrap_pct=0.08,  # 8% scrap for imaging
+    #                 created_by_id=admin_user.id, updated_by_id=admin_user.id)
 
-    bom_20 = BomItem(routing_op_id=ro_20.id, material_id=mat_chemicals.id, quantity=2.5, uom='L',
-                    base_qty=1, base_uom='panel', multiplier=1, scrap_pct=0.05,  # 5% scrap for etching
-                    created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # bom_20 = BomItem(routing_op_id=ro_20.id, material_id=mat_chemicals.id, quantity=2.5, uom='L',
+    #                 base_qty=1, base_uom='panel', multiplier=1, scrap_pct=0.05,  # 5% scrap for etching
+    #                 created_by_id=admin_user.id, updated_by_id=admin_user.id)
 
-    bom_30 = BomItem(routing_op_id=ro_30.id, material_id=mat_fr4.id, quantity=0.6, uom='SQMT',
-                    base_qty=1, base_uom='panel', multiplier=1, scrap_pct=0.03,  # 3% scrap for lamination
-                    created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # bom_30 = BomItem(routing_op_id=ro_30.id, material_id=mat_fr4.id, quantity=0.6, uom='SQMT',
+    #                 base_qty=1, base_uom='panel', multiplier=1, scrap_pct=0.03,  # 3% scrap for lamination
+    #                 created_by_id=admin_user.id, updated_by_id=admin_user.id)
 
-    bom_40 = BomItem(routing_op_id=ro_40.id, material_id=mat_prepreg.id, quantity=0.4, uom='SQMT',
-                    base_qty=1, base_uom='panel', multiplier=1, scrap_pct=0.02,  # 2% scrap for drilling
-                    created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # bom_40 = BomItem(routing_op_id=ro_40.id, material_id=mat_prepreg.id, quantity=0.4, uom='SQMT',
+    #                 base_qty=1, base_uom='panel', multiplier=1, scrap_pct=0.02,  # 2% scrap for drilling
+    #                 created_by_id=admin_user.id, updated_by_id=admin_user.id)
 
-    db.session.add_all([res_10, res_20, res_30, res_40, res_50, bom_10, bom_20, bom_30, bom_40])
-    db.session.commit()
+    # db.session.add_all([res_10, res_20, res_30, res_40, res_50, bom_10, bom_20, bom_30, bom_40])
+    # db.session.commit()
 
-    # --- Step 6: Create Demand Data (Sales Order) ---
-    # FIX: Added a unique order_num for SalesOrder
-    so_apple = SalesOrder(order_num='SO-2025-HDI001', cust_id=customer_apple.id, ship_to_loc_id=apple_location.id, 
-                         order_date=date.today(), 
-                         created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    db.session.add(so_apple)
-    db.session.commit()
+    # # --- Step 6: Create Demand Data (Sales Order) ---
+    # # FIX: Added a unique order_num for SalesOrder
+    # so_apple = SalesOrder(order_num='SO-2025-HDI001', cust_id=customer_apple.id, ship_to_loc_id=apple_location.id, 
+    #                      order_date=date.today(), 
+    #                      created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # db.session.add(so_apple)
+    # db.session.commit()
 
-    sol_1 = SalesOrderLine(order_id=so_apple.id, line_num=1, product_id=product_hdi_pcb.id, 
-                          quantity=1000, routing_id=routing_hdi.id, 
-                          created_by_id=admin_user.id, updated_by_id=admin_user.id)
-    db.session.add(sol_1)
-    db.session.commit()
+    # sol_1 = SalesOrderLine(order_id=so_apple.id, line_num=1, product_id=product_hdi_pcb.id, 
+    #                       quantity=1000, routing_id=routing_hdi.id, 
+    #                       created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    # db.session.add(sol_1)
+    # db.session.commit()
 
-    print("Database seeded successfully!")
-    print("Sample login: admin/supersecret or planner1/password123")
+    # print("Database seeded successfully!")
+    # print("Sample login: admin/supersecret or planner1/password123")
 

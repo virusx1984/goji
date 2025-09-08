@@ -1,9 +1,9 @@
-# goji/migrations/env.py
 import logging
 from logging.config import fileConfig
 
 from flask import current_app
-
+from sqlalchemy import create_engine, pool
+from sqlalchemy.engine import Connection
 from alembic import context
 
 # this is the Alembic Config object, which provides
@@ -51,6 +51,15 @@ def get_metadata():
         return target_db.metadatas[None]
     return target_db.metadata
 
+def include_object(obj, name, type_, reflected, compare_to):
+    """
+    Define a filter to include only tables that start with 'gj_'.
+    """
+    if type_ == "table" and name.startswith("gj_"):
+        return True
+    else:
+        return False
+
 
 def run_migrations_offline():
     """Run migrations in 'offline' mode.
@@ -66,7 +75,8 @@ def run_migrations_offline():
     """
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        url=url, target_metadata=get_metadata(), literal_binds=True
+        url=url, target_metadata=get_metadata(), literal_binds=True,
+        include_object=include_object # Add the object inclusion filter
     )
 
     with context.begin_transaction():
@@ -101,14 +111,8 @@ def run_migrations_online():
         context.configure(
             connection=connection,
             target_metadata=get_metadata(),
-            
-            # --- START: THIS IS THE CRITICAL MODIFICATION ---
-            # Forcefully pass the version table name directly from the Flask app config.
-            # This ensures that the correct table name is used, bypassing any
-            # potential issues in the config handoff between Flask-Migrate and Alembic.
             version_table=current_app.config.get('MIGRATE_VERSION_TABLE'),
-            # --- END: THIS IS THE CRITICAL MODIFICATION ---
-
+            include_object=include_object, # Add the object inclusion filter
             **conf_args
         )
 

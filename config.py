@@ -11,7 +11,7 @@ class Config:
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=8)
 
     # Set a unique name for the migration version table for this project.
-    MIGRATE_VERSION_TABLE = 'goji_alembic_version'
+    MIGRATE_VERSION_TABLE = 'gj_alembic_version'
 
 class DevelopmentConfig(Config):
     """Development configuration."""

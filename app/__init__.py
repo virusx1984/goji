@@ -2,7 +2,7 @@
 from flask import Flask
 import config
 from .extensions import db, migrate, bcrypt, jwt, cors, ma
-from .commands import seed_data_command
+from .commands import seed_data_command, empty_db_command
 
 # A dictionary to map configuration names (strings) to their corresponding classes.
 # This allows the factory to be called with a string name like 'development'.
@@ -28,7 +28,6 @@ def create_app(config_name='development'):
     config_object = config_by_name.get(config_name, config.DevelopmentConfig)
     app.config.from_object(config_object)
 
-    print(f"DEBUG: MIGRATE_VERSION_TABLE is set to: {app.config.get('MIGRATE_VERSION_TABLE')}")
 
     # --- Step 2: Initialize Extensions ---
     # Pass the fully configured app object to each extension's init_app method.
@@ -57,5 +56,6 @@ def create_app(config_name='development'):
 
     # --- Step 4: Register Custom CLI Commands ---
     app.cli.add_command(seed_data_command)
+    app.cli.add_command(empty_db_command)
 
     return app
