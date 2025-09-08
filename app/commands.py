@@ -6,12 +6,12 @@ from datetime import datetime, date
 from .extensions import db
 
 # Import all necessary models for a complete seed
-from .user_management.models import User, Role, Permission, Menu, user_roles, role_permissions
-from .organization.models import Plant, BusinessUnit, LegalEntity, FactoryCluster
-from .master_data.models import Customer, CustomerLocation, Supplier, SupplierLocation, Product, Material, Operation, WorkCenter, MaterialSupplier, SupplierRelationship # Added MaterialSupplier, SupplierRelationship
-from .process.models import Routing, RoutingOperation, OperationResource, BomItem, AlternateMaterial # Added AlternateMaterial
-from .demand.models import SalesOrder, SalesOrderLine
-from .system.models import AuditLog # Added AuditLog
+from .user_management.models import *
+from .organization.models import *
+from .master_data.models import *
+from .process.models import *
+from .demand.models import *
+from .system.models import *
 
 @click.command(name='seed')
 @with_appcontext
@@ -118,8 +118,23 @@ def seed_data_command():
     db.session.commit()
 
     # HDI PCB Product
-    product_ap1301 = Product(cust_id=customer_apple.id, cust_part_num='820-03902-A', cust_ver='', 
-                              description='6-Layer HDI PCB for A12 Chip', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    product_820_03902_A = Product(cust_id=customer_apple.id, end_cust_id = customer_apple.id, cust_part_num='820-03902-A',
+                              description='3阶10层板', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    
+
+    # layer definition
+    layer_def_0 = LayerDefinition(layer_code='0', layer_name='外层', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    layer_def_34 = LayerDefinition(layer_code='34', layer_name='L04~05', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    layer_def_36 = LayerDefinition(layer_code='36', layer_name='L06~07', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    layer_def_143 = LayerDefinition(layer_code='143', layer_name='L03~08', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    layer_def_191 = LayerDefinition(layer_code='191', layer_name='L02~09', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+
+    db.session.add([layer_def_0, layer_def_34, layer_def_36, layer_def_143, layer_def_191])
+    db.session.commit()
+
+    # layer structures
+    layer_struct_ = LayerStructure()
+
 
     # Suppliers
     supplier_tmc = Supplier(code='0001', name='台光', supplier_type='Manufacturer', created_by_id=admin_user.id, updated_by_id=admin_user.id)

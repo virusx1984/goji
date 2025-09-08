@@ -11,6 +11,8 @@ class Routing(ModelBase):
     plant_id = db.Column(db.Integer, db.ForeignKey('gj_plants.id'), nullable=False)
     int_part_num = db.Column(db.String(100), nullable=False, index=True)
     int_ver = db.Column(db.String(50), nullable=False)
+    pcs_per_strip = db.Column(db.Integer)
+    strips_per_panel = db.Column(db.Integer)
     is_default = db.Column(db.Boolean, nullable=False, default=False)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
 
@@ -54,7 +56,7 @@ class LayerDefinition(ModelBase):
 class LayerStructure(ModelBase):
     """Defines the hierarchical structure of layers for a product."""
     id = db.Column(db.Integer, primary_key=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('gj_products.id'), nullable=False)
+    routing_id  = db.Column(db.Integer, db.ForeignKey('gj_routings.id'), nullable=False)
     parent_layer_id = db.Column(db.Integer, db.ForeignKey('gj_layer_definitions.id'), nullable=True)
     child_layer_id = db.Column(db.Integer, db.ForeignKey('gj_layer_definitions.id'), nullable=False)
     is_primary_branch = db.Column(db.Boolean, nullable=False, default=False)
