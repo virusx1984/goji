@@ -101,6 +101,23 @@ class Product(ModelBase):
     created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
+class InternalProduct(ModelBase):
+    """
+    Defines a product within the company, linking it to a customer's product.
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('gj_products.id'), nullable=False)
+    plant_id = db.Column(db.Integer, db.ForeignKey('gj_plants.id'), nullable=False)
+    int_part_num = db.Column(db.String(100), nullable=False, index=True)
+    description = db.Column(db.String(500))
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+
+    # Audit Fields
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
+    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
+
 class Material(ModelBase):
     """
     Master data for all items (raw, semi-finished, finished goods).

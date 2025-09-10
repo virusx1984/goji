@@ -7,9 +7,7 @@ class Routing(ModelBase):
     """Defines the master record for a manufacturing process of a product."""
     id = db.Column(db.Integer, primary_key=True)
     routing_status = db.Column(db.String(50), nullable=False, default='ACTIVE') # e.g., 'PLANNING', 'ACTIVE'
-    product_id = db.Column(db.Integer, db.ForeignKey('gj_products.id'), nullable=False)
-    plant_id = db.Column(db.Integer, db.ForeignKey('gj_plants.id'), nullable=False)
-    int_part_num = db.Column(db.String(100), nullable=False, index=True)
+    int_product_id = db.Column(db.Integer, db.ForeignKey('gj_internal_products.id'), nullable=False)
     int_ver = db.Column(db.String(50), nullable=False)
     pcs_per_strip = db.Column(db.Integer)
     strips_per_panel = db.Column(db.Integer)

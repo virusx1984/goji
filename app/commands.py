@@ -4,6 +4,7 @@ import click
 from datetime import datetime, date
 from sqlalchemy import text
 import os
+import shutil
 from flask import current_app
 
 from .extensions import db
@@ -52,7 +53,7 @@ def empty_db_command():
                     print(f"Executing Oracle PL/SQL to drop table {version_table} if it exists.")
                     oracle_sql = text(f"""
                     BEGIN
-                       EXECUTE IMMEDIATE 'DROP TABLE "{version_table}"';
+                       EXECUTE IMMEDIATE 'DROP TABLE {version_table}';
                     EXCEPTION
                        WHEN OTHERS THEN
                           IF SQLCODE != -942 THEN
@@ -71,6 +72,10 @@ def empty_db_command():
     
     project_root = os.path.abspath(os.path.join(current_app.root_path, '..'))
     versions_dir = os.path.join(project_root, 'migrations', 'versions')
+    vertions_pyc_dir = os.path.join(versions_dir, '__pycache__')
+
+    if os.path.isdir(vertions_pyc_dir):
+        shutil.rmtree(vertions_pyc_dir)
 
     if os.path.isdir(versions_dir):
         files_to_remove = [f for f in os.listdir(versions_dir) if f.endswith('.py') and f != '__init__.py']
@@ -198,8 +203,8 @@ def seed_data_command():
     db.session.commit()
 
     # # HDI PCB Product
-    # product_820_03902_A = Product(cust_id=customer_apple.id, end_cust_id = customer_apple.id, cust_part_num='820-03902-A',
-    #                           description='3阶10层板', created_by_id=admin_user.id, updated_by_id=admin_user.id)
+    product_820_03902_A = Product(cust_id=customer_apple.id, end_cust_id = customer_apple.id, cust_part_num='820-03902-A',
+                              description='3阶10层板', created_by_id=admin_user.id, updated_by_id=admin_user.id)
     
 
     # # layer definition

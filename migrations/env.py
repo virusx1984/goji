@@ -53,12 +53,15 @@ def get_metadata():
 
 def include_object(obj, name, type_, reflected, compare_to):
     """
-    Define a filter to include only tables that start with 'gj_'.
+    Define a filter to include only tables that start with 'gj_' OR
+    are not reflected (i.e., are new tables being created).
     """
-    if type_ == "table" and name.startswith("gj_"):
-        return True
-    else:
-        return False
+    if type_ == "table":
+        if name.startswith("gj_") or not reflected:
+            return True
+        else:
+            return False
+    return True  # Include all other objects (columns, constraints, etc.)
 
 
 def run_migrations_offline():
