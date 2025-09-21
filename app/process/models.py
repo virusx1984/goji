@@ -56,8 +56,8 @@ class LayerStructure(ModelBase):
     """Defines the hierarchical structure of layers for a product."""
     id = db.Column(db.Integer, Sequence('gj_layer_structure_id_seq'), primary_key=True)
     routing_id  = db.Column(db.Integer, db.ForeignKey('gj_routings.id'), nullable=False)
-    parent_layer_id = db.Column(db.Integer, db.ForeignKey('gj_layer_definitions.id'), nullable=True)
-    child_layer_id = db.Column(db.Integer, db.ForeignKey('gj_layer_definitions.id'), nullable=False)
+    current_layer_id = db.Column(db.Integer, db.ForeignKey('gj_layer_definitions.id'), nullable=True)
+    next_layer_id = db.Column(db.Integer, db.ForeignKey('gj_layer_definitions.id'), nullable=False)
     is_primary_branch = db.Column(db.Boolean, nullable=False, default=False)
     hierarchy_level = db.Column(db.Integer, nullable=False)
 
