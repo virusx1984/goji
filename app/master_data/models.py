@@ -1,4 +1,5 @@
 # goji/app/master_data/models.py
+from sqlalchemy import Sequence
 from ..extensions import db
 from ..models import ModelBase
 from datetime import datetime
@@ -11,7 +12,7 @@ class Customer(ModelBase):
     """
     Stores customer's legal/group information (Bill-To).
     """
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, Sequence('gj_customer_id_seq'), primary_key=True)
     code = db.Column(db.String(50), nullable=False, unique=True, index=True)
     name = db.Column(db.String(255), nullable=False)
     
@@ -27,7 +28,7 @@ class CustomerLocation(ModelBase):
     """
     Stores customer's physical delivery locations (Ship-To).
     """
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, Sequence('gj_customer_location_id_seq'), primary_key=True)
     cust_id = db.Column(db.Integer, db.ForeignKey('gj_customers.id'), nullable=False)
     loc_name = db.Column(db.String(255), nullable=False)
     loc_code = db.Column(db.String(50))
@@ -46,7 +47,7 @@ class Supplier(ModelBase):
     """
     Stores supplier's legal/group information.
     """
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, Sequence('gj_supplier_id_seq'), primary_key=True)
     code = db.Column(db.String(50), nullable=False, unique=True, index=True)
     name = db.Column(db.String(255), nullable=False)
     supplier_type = db.Column(db.String(50)) # e.g., 'Manufacturer', 'Distributor'
@@ -63,7 +64,7 @@ class SupplierLocation(ModelBase):
     """
     Stores supplier's physical shipping/service locations.
     """
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, Sequence('gj_supplier_location_id_seq'), primary_key=True)
     supplier_id = db.Column(db.Integer, db.ForeignKey('gj_suppliers.id'), nullable=False)
     loc_name = db.Column(db.String(255), nullable=False)
     loc_code = db.Column(db.String(50))
@@ -87,7 +88,7 @@ class Product(ModelBase):
     """
     Defines a product required by a customer. This is the root for a routing.
     """
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, Sequence('gj_product_id_seq'), primary_key=True)
     product_status = db.Column(db.String(50), nullable=False, default='ACTIVE') # 'PLANNING', 'ACTIVE', 'EOL'
     ref_product_id = db.Column(db.Integer, db.ForeignKey('gj_products.id'), nullable=True)
     cust_id = db.Column(db.Integer, db.ForeignKey('gj_customers.id'), nullable=False)
@@ -105,7 +106,7 @@ class InternalProduct(ModelBase):
     """
     Defines a product within the company, linking it to a customer's product.
     """
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, Sequence('gj_internal_product_id_seq'), primary_key=True)
     product_id = db.Column(db.Integer, db.ForeignKey('gj_products.id'), nullable=False)
     plant_id = db.Column(db.Integer, db.ForeignKey('gj_plants.id'), nullable=False)
     int_part_num = db.Column(db.String(100), nullable=False, index=True)
@@ -122,7 +123,7 @@ class Material(ModelBase):
     """
     Master data for all items (raw, semi-finished, finished goods).
     """
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, Sequence('gj_material_id_seq'), primary_key=True)
     part_num = db.Column(db.String(100), nullable=False, unique=True, index=True)
     material_type = db.Column(db.String(50), nullable=False) # 'RAW', 'SEMI', 'FINISHED'
     name = db.Column(db.String(255))
@@ -143,7 +144,7 @@ class Operation(ModelBase):
     """
     Standard, reusable manufacturing operations.
     """
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, Sequence('gj_operation_id_seq'), primary_key=True)
     code = db.Column(db.String(50), unique=True)
     name = db.Column(db.String(100), nullable=False, unique=True)
     description = db.Column(db.String(500))
@@ -158,7 +159,7 @@ class Asset(ModelBase):
     """
     Master data for physical assets (equipment, tools, etc.).
     """
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, Sequence('gj_asset_id_seq'), primary_key=True)
     asset_group_id = db.Column(db.Integer, db.ForeignKey('gj_asset_groups.id'), nullable=True)
     asset_tag = db.Column(db.String(100), nullable=False, unique=True)
     serial_num = db.Column(db.String(100), unique=True)
@@ -181,7 +182,7 @@ class AssetGroup(ModelBase):
     """
     A logical grouping of assets (e.g., a production line).
     """
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, Sequence('gj_asset_group_id_seq'), primary_key=True)
     plant_id = db.Column(db.Integer, db.ForeignKey('gj_plants.id'), nullable=False)
     name = db.Column(db.String(100), nullable=False, unique=True)
     group_status = db.Column(db.String(50), nullable=False, default='Active')
@@ -197,7 +198,7 @@ class WorkCenter(ModelBase):
     """
     A logical scheduling unit for capacity planning.
     """
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, Sequence('gj_work_center_id_seq'), primary_key=True)
     plant_id = db.Column(db.Integer, db.ForeignKey('gj_plants.id'), nullable=False)
     name = db.Column(db.String(100), nullable=False, unique=True)
     description = db.Column(db.String(500))
@@ -213,7 +214,7 @@ class WorkCenter(ModelBase):
 
 # --- Association Table for Work Centers and Assets ---
 work_center_assets = db.Table('gj_work_center_assets',
-    db.Column('id', db.Integer, primary_key=True),
+    db.Column('id', db.Integer, Sequence('gj_work_center_assets_id_seq'), primary_key=True),
     db.Column('wc_id', db.Integer, db.ForeignKey('gj_work_centers.id'), nullable=False),
     db.Column('asset_id', db.Integer, db.ForeignKey('gj_assets.id'), nullable=False),
     db.Column('created_at', db.DateTime, default=datetime.utcnow, nullable=False),
@@ -226,7 +227,7 @@ class MaterialSupplier(ModelBase):
     Association object linking a Material to a SupplierLocation.
     This corresponds to the 'material_suppliers' table in the design doc.
     """
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, Sequence('gj_material_supplier_id_seq'), primary_key=True)
     material_id = db.Column(db.Integer, db.ForeignKey('gj_materials.id'), nullable=False)
     sup_loc_id = db.Column(db.Integer, db.ForeignKey('gj_supplier_locations.id'), nullable=False)
     
@@ -256,7 +257,7 @@ class SupplierRelationship(ModelBase):
     Defines relationships between suppliers (e.g., agent, parent company).
     This corresponds to the 'supplier_relationships' table in the design doc.
     """
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, Sequence('gj_supplier_relationship_id_seq'), primary_key=True)
     # This is the agent or subsidiary supplier
     supplier_id = db.Column(db.Integer, db.ForeignKey('gj_suppliers.id'), nullable=False)
     # This is the manufacturer or parent company supplier
