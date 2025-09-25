@@ -1,5 +1,4 @@
 # goji/app/user_management/models.py
-from sqlalchemy import Sequence
 from ..extensions import db, bcrypt
 from datetime import datetime
 from ..models import ModelBase
@@ -7,7 +6,7 @@ from ..models import ModelBase
 # --- Association Tables ---
 
 user_roles = db.Table('gj_user_roles',
-    db.Column('id', db.Integer, Sequence('gj_user_roles_id_seq'), primary_key=True),
+    db.Column('id', db.Integer, primary_key=True),
     db.Column('user_id', db.Integer, db.ForeignKey('gj_users.id'), nullable=False),
     db.Column('role_id', db.Integer, db.ForeignKey('gj_roles.id'), nullable=False),
     db.Column('plant_id', db.Integer, db.ForeignKey('gj_plants.id'), nullable=True),
@@ -18,7 +17,7 @@ user_roles = db.Table('gj_user_roles',
 )
 
 role_permissions = db.Table('gj_role_permissions',
-    db.Column('id', db.Integer, Sequence('gj_role_permissions_id_seq'), primary_key=True),
+    db.Column('id', db.Integer, primary_key=True),
     db.Column('role_id', db.Integer, db.ForeignKey('gj_roles.id'), nullable=False),
     db.Column('permission_id', db.Integer, db.ForeignKey('gj_permissions.id'), nullable=False),
     db.Column('created_at', db.DateTime, default=datetime.utcnow, nullable=False),
@@ -29,7 +28,7 @@ role_permissions = db.Table('gj_role_permissions',
 # --- Main Models ---
 
 class User(ModelBase):
-    id = db.Column(db.Integer, Sequence('gj_users_id_seq'), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
     full_name = db.Column(db.String(120))
@@ -52,7 +51,7 @@ class User(ModelBase):
         return bcrypt.check_password_hash(self.password_hash, password)
 
 class Role(ModelBase):
-    id = db.Column(db.Integer, Sequence('gj_roles_id_seq'), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True, nullable=False)
     description = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
@@ -61,14 +60,14 @@ class Role(ModelBase):
     permissions = db.relationship('Permission', secondary=role_permissions, backref=db.backref('roles', lazy='dynamic'))
 
 class Permission(ModelBase):
-    id = db.Column(db.Integer, Sequence('gj_permissions_id_seq'), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), unique=True, nullable=False)
     description = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
 class Menu(ModelBase):
-    id = db.Column(db.Integer, Sequence('gj_menus_id_seq'), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     parent_id = db.Column(db.Integer, db.ForeignKey('gj_menus.id'), nullable=True)
     name = db.Column(db.String(100), nullable=False)
     route = db.Column(db.String(255))

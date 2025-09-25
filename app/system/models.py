@@ -1,5 +1,4 @@
 # goji/app/system/models.py
-from sqlalchemy import Sequence
 from ..extensions import db
 from ..models import ModelBase
 from sqlalchemy.dialects.postgresql import JSONB
@@ -7,7 +6,7 @@ from datetime import datetime
 
 class AuditLog(ModelBase):
     """Stores a log of all significant create, update, delete actions."""
-    id = db.Column(db.BigInteger, Sequence('gj_audit_log_id_seq'), primary_key=True)
+    id = db.Column(db.BigInteger, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     action_type = db.Column(db.String(50), nullable=False) # e.g., 'CREATE', 'UPDATE', 'DELETE'
     table_name = db.Column(db.String(100))
@@ -16,3 +15,4 @@ class AuditLog(ModelBase):
     after_value = db.Column(db.Text)   # CHANGED: from JSONB to Text
     ip_address = db.Column(db.String(50))
     timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
