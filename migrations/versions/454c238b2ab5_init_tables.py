@@ -1,8 +1,8 @@
-"""init
+"""init tables
 
-Revision ID: 7be374231096
+Revision ID: 454c238b2ab5
 Revises: 
-Create Date: 2025-09-10 19:59:10.631478
+Create Date: 2025-09-26 20:26:12.244538
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '7be374231096'
+revision = '454c238b2ab5'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -387,29 +387,25 @@ def upgrade():
     sa.PrimaryKeyConstraint('id', name=op.f('pk_gj_asset_groups')),
     sa.UniqueConstraint('name', name=op.f('uq_gj_asset_groups_name'))
     )
-    op.create_table('gj_routings',
+    op.create_table('gj_internal_products',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('routing_status', sa.String(length=50), nullable=False),
     sa.Column('product_id', sa.Integer(), nullable=False),
     sa.Column('plant_id', sa.Integer(), nullable=False),
     sa.Column('int_part_num', sa.String(length=100), nullable=False),
-    sa.Column('int_ver', sa.String(length=50), nullable=False),
-    sa.Column('pcs_per_strip', sa.Integer(), nullable=True),
-    sa.Column('strips_per_panel', sa.Integer(), nullable=True),
-    sa.Column('is_default', sa.Boolean(), nullable=False),
+    sa.Column('description', sa.String(length=500), nullable=True),
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.Column('created_by_id', sa.Integer(), nullable=True),
     sa.Column('updated_by_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['created_by_id'], ['gj_users.id'], name=op.f('fk_gj_routings_created_by_id_gj_users')),
-    sa.ForeignKeyConstraint(['plant_id'], ['gj_plants.id'], name=op.f('fk_gj_routings_plant_id_gj_plants')),
-    sa.ForeignKeyConstraint(['product_id'], ['gj_products.id'], name=op.f('fk_gj_routings_product_id_gj_products')),
-    sa.ForeignKeyConstraint(['updated_by_id'], ['gj_users.id'], name=op.f('fk_gj_routings_updated_by_id_gj_users')),
-    sa.PrimaryKeyConstraint('id', name=op.f('pk_gj_routings'))
+    sa.ForeignKeyConstraint(['created_by_id'], ['gj_users.id'], name=op.f('fk_gj_internal_products_created_by_id_gj_users')),
+    sa.ForeignKeyConstraint(['plant_id'], ['gj_plants.id'], name=op.f('fk_gj_internal_products_plant_id_gj_plants')),
+    sa.ForeignKeyConstraint(['product_id'], ['gj_products.id'], name=op.f('fk_gj_internal_products_product_id_gj_products')),
+    sa.ForeignKeyConstraint(['updated_by_id'], ['gj_users.id'], name=op.f('fk_gj_internal_products_updated_by_id_gj_users')),
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_gj_internal_products'))
     )
-    with op.batch_alter_table('gj_routings', schema=None) as batch_op:
-        batch_op.create_index(batch_op.f('ix_gj_routings_int_part_num'), ['int_part_num'], unique=False)
+    with op.batch_alter_table('gj_internal_products', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_gj_internal_products_int_part_num'), ['int_part_num'], unique=False)
 
     op.create_table('gj_sales_order_lines',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -487,18 +483,36 @@ def upgrade():
     sa.UniqueConstraint('asset_tag', name=op.f('uq_gj_assets_asset_tag')),
     sa.UniqueConstraint('serial_num', name=op.f('uq_gj_assets_serial_num'))
     )
+    op.create_table('gj_routings',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('routing_status', sa.String(length=50), nullable=False),
+    sa.Column('int_product_id', sa.Integer(), nullable=False),
+    sa.Column('int_ver', sa.String(length=50), nullable=False),
+    sa.Column('pcs_per_strip', sa.Integer(), nullable=True),
+    sa.Column('strips_per_panel', sa.Integer(), nullable=True),
+    sa.Column('is_default', sa.Boolean(), nullable=False),
+    sa.Column('is_active', sa.Boolean(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.Column('created_by_id', sa.Integer(), nullable=True),
+    sa.Column('updated_by_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['created_by_id'], ['gj_users.id'], name=op.f('fk_gj_routings_created_by_id_gj_users')),
+    sa.ForeignKeyConstraint(['int_product_id'], ['gj_internal_products.id'], name=op.f('fk_gj_routings_int_product_id_gj_internal_products')),
+    sa.ForeignKeyConstraint(['updated_by_id'], ['gj_users.id'], name=op.f('fk_gj_routings_updated_by_id_gj_users')),
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_gj_routings'))
+    )
     op.create_table('gj_layer_structures',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('routing_id', sa.Integer(), nullable=False),
-    sa.Column('parent_layer_id', sa.Integer(), nullable=True),
-    sa.Column('child_layer_id', sa.Integer(), nullable=False),
+    sa.Column('current_layer_id', sa.Integer(), nullable=True),
+    sa.Column('next_layer_id', sa.Integer(), nullable=False),
     sa.Column('is_primary_branch', sa.Boolean(), nullable=False),
     sa.Column('hierarchy_level', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('created_by_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['child_layer_id'], ['gj_layer_definitions.id'], name=op.f('fk_gj_layer_structures_child_layer_id_gj_layer_definitions')),
     sa.ForeignKeyConstraint(['created_by_id'], ['gj_users.id'], name=op.f('fk_gj_layer_structures_created_by_id_gj_users')),
-    sa.ForeignKeyConstraint(['parent_layer_id'], ['gj_layer_definitions.id'], name=op.f('fk_gj_layer_structures_parent_layer_id_gj_layer_definitions')),
+    sa.ForeignKeyConstraint(['current_layer_id'], ['gj_layer_definitions.id'], name=op.f('fk_gj_layer_structures_current_layer_id_gj_layer_definitions')),
+    sa.ForeignKeyConstraint(['next_layer_id'], ['gj_layer_definitions.id'], name=op.f('fk_gj_layer_structures_next_layer_id_gj_layer_definitions')),
     sa.ForeignKeyConstraint(['routing_id'], ['gj_routings.id'], name=op.f('fk_gj_layer_structures_routing_id_gj_routings')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_gj_layer_structures'))
     )
@@ -523,6 +537,17 @@ def upgrade():
     sa.ForeignKeyConstraint(['routing_id'], ['gj_routings.id'], name=op.f('fk_gj_routing_operations_routing_id_gj_routings')),
     sa.ForeignKeyConstraint(['updated_by_id'], ['gj_users.id'], name=op.f('fk_gj_routing_operations_updated_by_id_gj_users')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_gj_routing_operations'))
+    )
+    op.create_table('gj_work_center_assets',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('wc_id', sa.Integer(), nullable=False),
+    sa.Column('asset_id', sa.Integer(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('created_by_id', sa.Integer(), nullable=True),
+    sa.ForeignKeyConstraint(['asset_id'], ['gj_assets.id'], name=op.f('fk_gj_work_center_assets_asset_id_gj_assets')),
+    sa.ForeignKeyConstraint(['created_by_id'], ['gj_users.id'], name=op.f('fk_gj_work_center_assets_created_by_id_gj_users')),
+    sa.ForeignKeyConstraint(['wc_id'], ['gj_work_centers.id'], name=op.f('fk_gj_work_center_assets_wc_id_gj_work_centers')),
+    sa.PrimaryKeyConstraint('id', name=op.f('pk_gj_work_center_assets'))
     )
     op.create_table('gj_bom_items',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -566,17 +591,6 @@ def upgrade():
     sa.ForeignKeyConstraint(['wc_id'], ['gj_work_centers.id'], name=op.f('fk_gj_operation_resources_wc_id_gj_work_centers')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_gj_operation_resources'))
     )
-    op.create_table('gj_work_center_assets',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('wc_id', sa.Integer(), nullable=False),
-    sa.Column('asset_id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('created_by_id', sa.Integer(), nullable=True),
-    sa.ForeignKeyConstraint(['asset_id'], ['gj_assets.id'], name=op.f('fk_gj_work_center_assets_asset_id_gj_assets')),
-    sa.ForeignKeyConstraint(['created_by_id'], ['gj_users.id'], name=op.f('fk_gj_work_center_assets_created_by_id_gj_users')),
-    sa.ForeignKeyConstraint(['wc_id'], ['gj_work_centers.id'], name=op.f('fk_gj_work_center_assets_wc_id_gj_work_centers')),
-    sa.PrimaryKeyConstraint('id', name=op.f('pk_gj_work_center_assets'))
-    )
     op.create_table('gj_alternate_materials',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('bom_item_id', sa.Integer(), nullable=False),
@@ -595,19 +609,20 @@ def upgrade():
 def downgrade():
     # ### commands auto generated by Alembic - please adjust! ###
     op.drop_table('gj_alternate_materials')
-    op.drop_table('gj_work_center_assets')
     op.drop_table('gj_operation_resources')
     op.drop_table('gj_bom_items')
+    op.drop_table('gj_work_center_assets')
     op.drop_table('gj_routing_operations')
     op.drop_table('gj_layer_structures')
+    op.drop_table('gj_routings')
     op.drop_table('gj_assets')
     op.drop_table('gj_work_centers')
     op.drop_table('gj_user_roles')
     op.drop_table('gj_sales_order_lines')
-    with op.batch_alter_table('gj_routings', schema=None) as batch_op:
-        batch_op.drop_index(batch_op.f('ix_gj_routings_int_part_num'))
+    with op.batch_alter_table('gj_internal_products', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_gj_internal_products_int_part_num'))
 
-    op.drop_table('gj_routings')
+    op.drop_table('gj_internal_products')
     op.drop_table('gj_asset_groups')
     op.drop_table('gj_sales_orders')
     op.drop_table('gj_plants')

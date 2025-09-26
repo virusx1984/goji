@@ -19,14 +19,23 @@ class DevelopmentConfig(Config):
     
     # Database connection details from environment variables with defaults
     #region --- PostgreSQL---
-    DB_USER = os.environ.get('DB_USER', 'lining')
-    DB_PASSWORD = os.environ.get('DB_PASSWORD', '111111')
-    DB_HOST = os.environ.get('DB_HOST', 'server01.home.net')
-    DB_PORT = os.environ.get('DB_PORT', '5432')
-    DB_NAME = os.environ.get('DB_NAME', 'gojidb')
+    # DB_USER = os.environ.get('DB_USER', 'lining')
+    # DB_PASSWORD = os.environ.get('DB_PASSWORD', '111111')
+    # DB_HOST = os.environ.get('DB_HOST', 'server01.home.net')
+    # DB_PORT = os.environ.get('DB_PORT', '5432')
+    # DB_NAME = os.environ.get('DB_NAME', 'gojidb')
     
-    SQLALCHEMY_DATABASE_URI = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
+    # SQLALCHEMY_DATABASE_URI = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
     #endregion === PostgreSQL ===
+
+    #region --- Oracle 11g Test ---
+    DB_USER = os.environ.get('DB_USER', 'hdibks')
+    DB_PASSWORD = os.environ.get('DB_PASSWORD', 'hdibks*168')
+    DB_HOST = os.environ.get('DB_HOST', 'server01.home.net')
+    DB_PORT = os.environ.get('DB_PORT', '1521')
+    DB_NAME = os.environ.get('DB_NAME', 'xe')
+    SQLALCHEMY_DATABASE_URI = f'oracle+oracledb://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
+    #endregion === Oracle 11g ===
 
     #region --- Oracle 11g ---
     # DB_USER = os.environ.get('DB_USER', 'hdibks')

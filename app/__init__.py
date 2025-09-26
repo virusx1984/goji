@@ -1,4 +1,18 @@
 # goji/app/__init__.py
+
+import oracledb
+import sys
+
+# --- Place this at the top of your application's entry point ---
+# Initialize the Oracle Client to enable "Thick Mode".
+# Since your Instant Client is already in the system PATH, the lib_dir parameter is usually not needed.
+try:
+    oracledb.init_oracle_client()
+except Exception as e:
+    print("Error initializing Oracle Client:", e)
+
+
+
 from flask import Flask
 import config
 from .extensions import db, migrate, bcrypt, jwt, cors, ma
