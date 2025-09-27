@@ -17,6 +17,14 @@ from .process.models import *
 from .demand.models import *
 from .system.models import *
 
+import sys
+#! 注意改成对的路径
+project_path = r'F:\Lining\MyProjects\OnGitHub'
+sys.path.append(project_path)
+
+#! 注意一下import vscode 中无法解析是没问题的，运行时候不会错，不用改
+from goji.utils.oracle_utils import generate_drop_sql
+
 @click.command(name='empty-db')
 @with_appcontext
 def empty_db_command():
@@ -27,6 +35,31 @@ def empty_db_command():
     if not click.confirm("WARNING: This will drop all tables (including migration history), losing all data. Continue?"):
         print("Operation cancelled.")
         return
+    
+    dialect = db.engine.dialect.name
+    print(f"Current database dialect: {dialect}")
+
+    # --- Step 1: Drop all Oracle Sequences and Triggers ---
+    if dialect == 'oracle':
+        print("\nStarting Oracle-specific cleanup of sequences and triggers...")
+        
+        # Manually get all table names
+        all_models = ModelBase.__subclasses__()
+        managed_tables = [model.__tablename__ for model in all_models]
+        managed_tables.extend(['gj_user_roles', 'gj_role_permissions'])
+
+        with db.engine.connect() as connection:
+            with connection.begin():
+                for table_name in managed_tables:
+                    try:
+                        print(f"   - Dropping sequence and trigger for table: {table_name}")
+                        drop_trigger_sql, drop_sequence_sql = generate_drop_sql(table_name)
+                        connection.execute(text(drop_trigger_sql))
+                        connection.execute(text(drop_sequence_sql))
+                    except Exception as e:
+                        # Catch exceptions if an object does not exist
+                        print(f"   - Failed to drop objects for {table_name}: {e}")
+        print("Oracle sequences and triggers cleanup complete.")
     
     # --- Step 1: Drop all application tables ---
     print("Dropping all application tables (known to SQLAlchemy)...")
