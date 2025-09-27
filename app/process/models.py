@@ -10,7 +10,7 @@ class Routing(ModelBase):
     int_product_id = db.Column(db.Integer, db.ForeignKey('gj_internal_products.id'), nullable=False)
     int_ver = db.Column(db.String(50), nullable=False)
     pcs_per_strip = db.Column(db.Integer)
-    strips_per_panel = db.Column(db.Integer)
+    strip_per_panel = db.Column(db.Integer)
     is_default = db.Column(db.Boolean, nullable=False, default=False)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
 
