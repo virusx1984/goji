@@ -145,7 +145,7 @@ class Operation(ModelBase):
     """
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(50), unique=True)
-    name = db.Column(db.String(100), nullable=False, unique=True)
+    name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(500))
 
     # Audit Fields
