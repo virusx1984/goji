@@ -46,7 +46,18 @@ class DevelopmentConfig(Config):
     # SQLALCHEMY_DATABASE_URI = f'oracle+cx_oracle://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
     #endregion === Oracle 11g ===
 
+class TestingConfig(Config):
+    """Testing configuration."""
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:' # Use in-memory SQLite for tests
+    SQLALCHEMY_TRACK_MODIFICATIONS = False # Ensure this is also False for tests
+    JWT_SECRET_KEY = 'a-test-secret-key-that-is-not-secure' # Test JWT key
+    # You might want to disable other features that are not needed for tests
+    # DEBUG = False # Usually False for tests, though not strictly necessary
+
 # You can add other configurations like ProductionConfig or TestingConfig here
 # class ProductionConfig(Config):
 #     DEBUG = False
 #     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+
+
