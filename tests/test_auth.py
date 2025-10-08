@@ -11,16 +11,18 @@ BASE_URL = "/api/auth"
 # --- Test Login ---
 
 def test_login_success(client, db_session):
+    print('FUNCTION CALL: test_login_success(client, db_session)')
     """Test successful login with valid credentials."""
+
     # Assuming 'admin' user with password 'testpassword' exists from conftest.py seeding
-    payload = {"username": "admin", "password": "testpassword"}
+    payload = {"username": "testadmin", "password": "testpassword"}
     response = client.post(f"{BASE_URL}/login", json=payload)
     
     assert response.status_code == 200
     data = json.loads(response.data)
     assert "access_token" in data
     assert "user" in data
-    assert data["user"]["username"] == "admin"
+    assert data["user"]["username"] == "testadmin"
     assert data["user"]["full_name"] == "Test Admin" # Assuming full_name is seeded
 
 def test_login_invalid_password(client, db_session):
@@ -112,7 +114,7 @@ def test_register_username_exists(client, db_session):
     """Test registration attempt with an existing username."""
     # Assuming 'admin' user already exists from conftest.py seeding
     payload = {
-        "username": "admin", # Existing username
+        "username": "testadmin", # Existing username
         "password": "new_password",
         "email": "admin_new@example.com",
         "full_name": "Admin New"

@@ -14,6 +14,7 @@ from app.user_management.models import User, Role, Permission # Import models fo
 
 @pytest.fixture(scope='session')
 def app():
+    print('FUNCTION CALL: app() session')
     """
     Provides a session-wide test application instance.
     Uses an in-memory SQLite database for testing.
@@ -62,6 +63,7 @@ def app():
 
 @pytest.fixture(scope='session')
 def client(app):
+    print('FUNCTION CALL: client(app) session')
     """
     Provides a session-wide test client for making requests to the Flask app.
     """
@@ -69,6 +71,7 @@ def client(app):
 
 @pytest.fixture(scope='function')
 def db_session(app):
+    print('FUNCTION CALL: db_session(app) function')
     """
     Provides a transactional scope around each test function.
     Ensures that each test runs with a clean database state and rolls back changes.

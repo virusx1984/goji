@@ -12,12 +12,13 @@ user_schema = UserSchema() # Instantiate for single user serialization
 
 @bp.route("/login", methods=["POST"])
 def login():
-    """
-    Authenticates a user and returns a JWT access token.
-    """
+    """Authenticates a user and returns a JWT access token."""
     username = request.json.get("username", None)
     password = request.json.get("password", None)
-    
+
+    if not username or not password:
+        return jsonify({"msg": "Missing username or password"}), 400 # Explicitly handle missing fields
+
     user = User.query.filter_by(username=username, is_active=True).first()
     if user and user.check_password(password):
         access_token = create_access_token(identity=str(user.id))
