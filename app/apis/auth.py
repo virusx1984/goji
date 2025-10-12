@@ -53,7 +53,6 @@ def register():
             return jsonify({"msg": "Username already exists"}), 409
         if User.query.filter_by(email=new_user.email).first():
             return jsonify({"msg": "Email already exists"}), 409
-
         db.session.add(new_user)
         db.session.commit()
         

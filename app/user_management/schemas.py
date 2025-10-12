@@ -28,7 +28,11 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
     """Schema for User, handling password securely and role assignments."""
     roles = fields.Nested(RoleSimpleSchema, many=True, dump_only=True)
     # 'password' is write-only for security and has validation
-    password = fields.Str(required=False, load_only=True, validate=validate.Length(min=6))
+    password = fields.Str(required=True, load_only=True, validate=validate.Length(min=6, error="Shorter than minimum length 6."))
+    # Add email validation
+    email = fields.Str(required=True, validate=validate.Email(error="Not a valid email address."))
+
+    full_name = fields.Str(required=True) # Full name is now required
     # 'role_ids' is a write-only field for updating the relationship
     role_ids = fields.List(fields.Int(), load_only=True)
 

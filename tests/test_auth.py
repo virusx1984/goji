@@ -11,7 +11,6 @@ BASE_URL = "/api/auth"
 # --- Test Login ---
 
 def test_login_success(client, db_session):
-    print('FUNCTION CALL: test_login_success(client, db_session)')
     """Test successful login with valid credentials."""
 
     # Assuming 'admin' user with password 'testpassword' exists from conftest.py seeding
@@ -156,7 +155,7 @@ def test_register_password_too_short(client, db_session):
     data = json.loads(response.data)
     assert "password" in data # Check if the error is related to the password field
     # The exact error message might vary slightly based on Marshmallow version or custom validation
-    assert "Field must be between 6 and 128 characters long." in data["password"][0] 
+    assert "Shorter than minimum length 6." in data["password"][0] 
 
 def test_register_invalid_email(client, db_session):
     """Test registration with an invalid email format."""
