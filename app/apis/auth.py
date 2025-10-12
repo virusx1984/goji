@@ -3,7 +3,7 @@ from flask import Blueprint, request, jsonify
 from ..user_management import User
 from ..user_management.schemas import UserSchema # Import UserSchema
 from ..extensions import db
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, unset_jwt_cookies
 from marshmallow import ValidationError
 
 bp = Blueprint('auth', __name__, url_prefix='/api/auth')
@@ -64,3 +64,12 @@ def register():
     except Exception as e:
         # Catch other potential errors during registration
         return jsonify({"msg": f"An error occurred: {str(e)}"}), 500
+    
+
+@bp.route("/logout", methods=["POST"])
+@jwt_required()
+def logout():
+    """Unsets the JWT access token cookie, effectively logging the user out."""
+    response = jsonify({"msg": "Successfully logged out"})
+    unset_jwt_cookies(response)
+    return response

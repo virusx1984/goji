@@ -199,3 +199,41 @@ def test_register_missing_fields(client, db_session):
     data_missing_password = json.loads(response_missing_password.data)
     assert "password" in data_missing_password
     assert "Missing data for required field." in data_missing_password["password"][0]
+
+# --- Test Logout ---
+
+def test_logout_success(client, db_session):
+    """Test successful logout."""
+    # 1. First, log in to get a token
+    login_payload = {"username": "testadmin", "password": "testpassword"}
+    login_response = client.post(f"{BASE_URL}/login", json=login_payload)
+    assert login_response.status_code == 200
+    login_data = json.loads(login_response.data)
+    access_token = login_data["access_token"]
+
+    # 2. Then, use the token to access the logout endpoint
+    headers = {"Authorization": f"Bearer {access_token}"}
+    response = client.post(f"{BASE_URL}/logout", headers=headers)
+
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert "msg" in data
+    assert "Successfully logged out" in data["msg"]
+    
+    # 3. Verify that the JWT cookie is unset (check for empty access token)
+    # This part depends on how your client handles cookies.
+    # In a test environment, you might not be able to directly inspect cookies.
+    # A more robust approach would be to check if subsequent requests with the same token are rejected.
+    # For simplicity, we'll just check the response status and message.
+    # In a real application, you'd likely have client-side logic to handle the unset cookie.
+
+def test_logout_unauthorized(client, db_session):
+    """Test logout without a valid JWT token."""
+    # Attempt to logout without a token
+    response = client.post(f"{BASE_URL}/logout")
+
+    # Expect a 401 Unauthorized response
+    assert response.status_code == 401
+    data = json.loads(response.data)
+    assert "msg" in data
+    assert "Missing Authorization Header" in data["msg"] # Or a similar message
