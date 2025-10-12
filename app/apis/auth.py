@@ -73,3 +73,16 @@ def logout():
     response = jsonify({"msg": "Successfully logged out"})
     unset_jwt_cookies(response)
     return response
+
+
+@bp.route("/me", methods=["GET"])
+@jwt_required()
+def get_current_user():
+    """Gets the current user's information."""
+    current_user_id = get_jwt_identity()
+    user = db.session.get(User, current_user_id)
+
+    if not user:
+        return jsonify({"msg": "User not found"}), 404
+
+    return jsonify(user_schema.dump(user)), 200

@@ -237,3 +237,39 @@ def test_logout_unauthorized(client, db_session):
     data = json.loads(response.data)
     assert "msg" in data
     assert "Missing Authorization Header" in data["msg"] # Or a similar message
+
+
+
+def test_get_current_user_success(client, db_session):
+    """Test successful retrieval of current user's information."""
+    # 1. First, log in to get a token
+    login_payload = {"username": "testadmin", "password": "testpassword"}
+    login_response = client.post(f"{BASE_URL}/login", json=login_payload)
+    assert login_response.status_code == 200
+    login_data = json.loads(login_response.data)
+    access_token = login_data["access_token"]
+
+    # 2. Then, use the token to access the /me endpoint
+    headers = {"Authorization": f"Bearer {access_token}"}
+    response = client.get(f"{BASE_URL}/me", headers=headers)
+
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert "username" in data
+    assert data["username"] == "testadmin"
+    assert "full_name" in data
+    assert data["full_name"] == "Test Admin"
+    assert "email" in data
+    assert data["email"] == "admin@test.com"
+    assert "password_hash" not in data # Ensure password is not returned
+
+def test_get_current_user_unauthorized(client, db_session):
+    """Test retrieval of current user's information without a valid JWT token."""
+    # Attempt to access the /me endpoint without a token
+    response = client.get(f"{BASE_URL}/me")
+
+    # Expect a 401 Unauthorized response
+    assert response.status_code == 401
+    data = json.loads(response.data)
+    assert "msg" in data
+    assert "Missing Authorization Header" in data["msg"] # Or a similar message    
