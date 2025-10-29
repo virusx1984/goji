@@ -2,8 +2,10 @@
 
 import pytest
 import json
-from app.user_management.models import User # Import User model for verification
+from app.user_management.models import User, PasswordResetToken # Import User model for verification
 from app.extensions import db as app_db # Import db for session access
+import secrets
+from datetime import datetime, timedelta
 
 # Define the base URL for auth API endpoints
 BASE_URL = "/api/auth"
@@ -273,3 +275,104 @@ def test_get_current_user_unauthorized(client, db_session):
     data = json.loads(response.data)
     assert "msg" in data
     assert "Missing Authorization Header" in data["msg"] # Or a similar message    
+
+
+def test_admin_request_password_reset_success(client, db_session):
+    """Test successful password reset request by an administrator."""
+    # 1. Log in as an admin user
+    login_payload = {"username": "testadmin", "password": "testpassword"}
+    login_response = client.post(f"{BASE_URL}/login", json=login_payload)
+    assert login_response.status_code == 200
+    login_data = json.loads(login_response.data)
+    access_token = login_data["access_token"]
+
+    # 2. Create a test user to reset the password for
+    test_user = User(username='targetuser', full_name='Target User', email='target@test.com')
+    test_user.set_password('oldpassword')
+    db_session.add(test_user)
+    db_session.commit()
+
+    # 3. Request password reset using the admin's token
+    headers = {"Authorization": f"Bearer {access_token}"}
+    reset_payload = {"user_id": test_user.id}
+    response = client.post(f"{BASE_URL}/admin/password/reset/request", json=reset_payload, headers=headers)
+    print(response.data)
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert "msg" in data
+    assert "Password reset link generated successfully" in data["msg"]
+    assert "reset_link" in data # Check if the reset link is returned
+
+    # 4. Verify that a reset token was created in the database
+    reset_token = PasswordResetToken.query.filter_by(user_id=test_user.id).first()
+    assert reset_token is not None
+    assert not reset_token.is_expired()
+
+
+def test_confirm_password_reset_success(client, db_session):
+    """Test successful password reset confirmation."""
+    # 1. Create a test user and a reset token
+    reset_user = User(username='confirmuser', full_name='Confirm User', email='confirm@test.com')
+    reset_user.set_password('oldpassword')
+    db_session.add(reset_user)
+    db_session.commit()
+
+    reset_token = secrets.token_urlsafe(32)
+    expiration_date = datetime.utcnow() + timedelta(hours=1)
+    reset_token_entry = PasswordResetToken(user=reset_user, token=reset_token, expiration_date=expiration_date)
+    db_session.add(reset_token_entry)
+    db_session.commit()
+
+    # 2. Confirm password reset with the token and a new password
+    payload = {"token": reset_token, "new_password": "newsecurepassword"}
+    response = client.post(f"{BASE_URL}/password/reset/confirm", json=payload)
+
+    assert response.status_code == 200
+    data = json.loads(response.data)
+    assert "msg" in data
+    assert "Password reset successfully" in data["msg"]
+
+    # 3. Verify that the password was actually changed
+    user = User.query.filter_by(username='confirmuser').first()
+    assert user.check_password("newsecurepassword")
+
+    # 4. Verify that the reset token was deleted
+    reset_token_entry = PasswordResetToken.query.filter_by(token=reset_token).first()
+    assert reset_token_entry is None
+
+def test_confirm_password_reset_invalid_token(client, db_session):
+    """Test password reset confirmation with an invalid token."""
+    payload = {"token": "invalidtoken", "new_password": "newpassword"}
+    response = client.post(f"{BASE_URL}/password/reset/confirm", json=payload)
+    
+    assert response.status_code == 400
+    data = json.loads(response.data)
+    assert "msg" in data
+    assert "Invalid reset token" in data["msg"]
+
+def test_confirm_password_reset_expired_token(client, db_session):
+    """Test password reset confirmation with an expired token."""
+    # 1. Create a test user and an expired reset token
+    expired_user = User(username='expireduser', full_name='Expired User', email='expired@test.com')
+    expired_user.set_password('oldpassword')
+    db_session.add(expired_user)
+    db_session.commit()
+
+    expired_token = secrets.token_urlsafe(32)
+    expiration_date = datetime.utcnow() - timedelta(hours=1) # Expired 1 hour ago
+    expired_token_entry = PasswordResetToken(user=expired_user, token=expired_token, expiration_date=expiration_date)
+    db_session.add(expired_token_entry)
+    db_session.commit()
+
+    # 2. Attempt to confirm password reset with the expired token
+    payload = {"token": expired_token, "new_password": "newpassword"}
+    response = client.post(f"{BASE_URL}/password/reset/confirm", json=payload)
+
+    assert response.status_code == 410
+    data = json.loads(response.data)
+    assert "msg" in data
+    assert "Reset token has expired" in data["msg"]
+
+    # 3. Verify that the expired token was deleted
+    expired_token_entry = PasswordResetToken.query.filter_by(token=expired_token).first()
+    assert expired_token_entry is None

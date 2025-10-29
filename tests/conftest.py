@@ -5,7 +5,8 @@ import os
 from flask import Flask
 from app import create_app  # Assuming your app factory is in goji/app/__init__.py
 from app.extensions import db as app_db # Import db from extensions
-from app.user_management.models import User, Role, Permission # Import models for seeding
+from app.user_management.models import User, Role, Permission, user_roles, role_permissions # Import models for seeding
+from datetime import datetime
 
 # --- Configuration for Testing ---
 # It's good practice to have a dedicated testing configuration.
@@ -48,6 +49,21 @@ def app():
                 admin_user.set_password('testpassword')
                 app_db.session.add(admin_user)
                 app_db.session.commit()
+
+                admin_role = Role(name = 'Admin')
+                admin_permission = Permission(name = 'admin:all')
+                app_db.session.add_all([admin_role, admin_permission])
+                app_db.session.commit() # Commit to get the role and permission IDs
+
+                # Associate the role and permission using the association table
+                # Use the insert() method on the association table object
+                app_db.session.execute(role_permissions.insert().values(role_id=admin_role.id, permission_id=admin_permission.id, created_at=datetime.utcnow())) # Corrected
+                app_db.session.commit()
+
+                # Associate the user and the role using the association table
+                app_db.session.execute(user_roles.insert().values(user_id=admin_user.id, role_id=admin_role.id, created_at=datetime.utcnow())) # Corrected
+                app_db.session.commit()
+
         except Exception as e:
             app_db.session.rollback()
             pytest.fail(f"Failed to seed test data: {e}")
@@ -63,7 +79,6 @@ def app():
 
 @pytest.fixture(scope='session')
 def client(app):
-    print('FUNCTION CALL: client(app) session')
     """
     Provides a session-wide test client for making requests to the Flask app.
     """
@@ -71,7 +86,6 @@ def client(app):
 
 @pytest.fixture(scope='function')
 def db_session(app):
-    print('FUNCTION CALL: db_session(app) function')
     """
     Provides a transactional scope around each test function.
     Ensures that each test runs with a clean database state and rolls back changes.

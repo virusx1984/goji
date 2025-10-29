@@ -1,6 +1,6 @@
 # goji/app/user_management/models.py
 from ..extensions import db, bcrypt
-from datetime import datetime
+from datetime import datetime, timedelta
 from ..models import ModelBase
 
 # --- Association Tables ---
@@ -77,3 +77,26 @@ class Menu(ModelBase):
 
     required_permission = db.relationship('Permission')
     children = db.relationship('Menu', backref=db.backref('parent', remote_side=[id]), lazy='dynamic', order_by='Menu.order_num')
+
+
+class PasswordResetToken(ModelBase):
+    """Stores password reset tokens and their associated user."""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'), nullable=False)
+    token = db.Column(db.String(100), unique=True, nullable=False)
+    expiration_date = db.Column(db.DateTime, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    user = db.relationship('User', backref=db.backref('reset_tokens', lazy='dynamic'))
+
+    def __init__(self, user, token, expiration_date=None):
+        self.user = user
+        self.token = token
+        if expiration_date is None:
+            # Set a default expiration time (e.g., 1 hour from now)
+            expiration_date = datetime.utcnow() + timedelta(hours=1)
+        self.expiration_date = expiration_date
+
+    def is_expired(self):
+        """Checks if the token has expired."""
+        return datetime.utcnow() > self.expiration_date

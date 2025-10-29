@@ -4,5 +4,5 @@
 # It also exposes the module's key components, like the Blueprint and primary models,
 # to make them easily importable from other parts of the application.
 
-from .models import User, Role, Permission, Menu, user_roles, role_permissions
-from .schemas import UserSchema, RoleSchema, RoleSimpleSchema, PermissionSchema, MenuSchema
+from .models import User, Role, Permission, Menu, user_roles, role_permissions, PasswordResetToken
+from .schemas import UserSchema, RoleSchema, RoleSimpleSchema, PermissionSchema, MenuSchema, PasswordResetTokenSchema

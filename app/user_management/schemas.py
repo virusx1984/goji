@@ -1,7 +1,7 @@
 # goji/app/user_management/schemas.py
 from marshmallow import fields, validate, post_load
 from ..extensions import ma
-from .models import User, Role, Permission, Menu
+from .models import User, Role, Permission, Menu, PasswordResetToken
 
 class PermissionSchema(ma.SQLAlchemyAutoSchema):
     """Schema for the Permission model."""
@@ -84,3 +84,11 @@ class MenuSchema(ma.SQLAlchemyAutoSchema):
         
         # Serialize the filtered children using the same schema instance
         return MenuSchema(many=True, context=self.context).dump(accessible_children)
+    
+
+class PasswordResetTokenSchema(ma.SQLAlchemyAutoSchema):
+    """Schema for the PasswordResetToken model."""
+    class Meta:
+        model = PasswordResetToken
+        load_instance = True
+        exclude = ("user",) # Exclude the user object to avoid circular dependencies

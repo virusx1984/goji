@@ -52,6 +52,7 @@ class TestingConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:' # Use in-memory SQLite for tests
     SQLALCHEMY_TRACK_MODIFICATIONS = False # Ensure this is also False for tests
     JWT_SECRET_KEY = 'a-test-secret-key-that-is-not-secure' # Test JWT key
+    FRONTEND_URL = 'http://localhost:3000'
     # You might want to disable other features that are not needed for tests
     # DEBUG = False # Usually False for tests, though not strictly necessary
 
