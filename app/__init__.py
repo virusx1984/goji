@@ -61,6 +61,7 @@ def create_app(config_name='development'):
     from .master_data.routes import bp as master_data_bp
     from .process.routes import bp as process_bp
     from .demand.routes import bp as demand_bp
+    from .system.routes import bp as system_bp # Add this line
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(user_management_bp)
@@ -68,6 +69,7 @@ def create_app(config_name='development'):
     app.register_blueprint(master_data_bp)
     app.register_blueprint(process_bp)
     app.register_blueprint(demand_bp)
+    app.register_blueprint(system_bp) # Add this line
 
     # --- Step 4: Register Custom CLI Commands ---
     app.cli.add_command(seed_data_command)

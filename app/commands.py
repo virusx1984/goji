@@ -19,7 +19,7 @@ from .system.models import *
 
 import sys
 #! 注意改成对的路径
-project_path = r'F:\Lining\MyProjects\OnGitHub'
+project_path = r'F:\Lining\MyProjects\2025_0803-goji'
 sys.path.append(project_path)
 
 #! 注意一下import vscode 中无法解析是没问题的，运行时候不会错，不用改
