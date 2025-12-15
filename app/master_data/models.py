@@ -1,13 +1,13 @@
 # goji/app/master_data/models.py
 from ..extensions import db
-from ..models import ModelBase
+from ..models import ModelBase, AuditMixin
 from datetime import datetime
 
 # =============================================
 # External Entities Domain
 # =============================================
 
-class Customer(ModelBase):
+class Customer(ModelBase, AuditMixin):
     """
     Stores customer's legal/group information (Bill-To).
     """
@@ -15,15 +15,9 @@ class Customer(ModelBase):
     code = db.Column(db.String(50), nullable=False, unique=True, index=True)
     name = db.Column(db.String(255), nullable=False)
     
-    # Audit Fields
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
 
-
-class CustomerLocation(ModelBase):
+class CustomerLocation(ModelBase, AuditMixin):
     """
     Stores customer's physical delivery locations (Ship-To).
     """
@@ -36,13 +30,8 @@ class CustomerLocation(ModelBase):
     phone = db.Column(db.String(50))
     is_default = db.Column(db.Boolean, nullable=False, default=False)
 
-    # Audit Fields
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-class Supplier(ModelBase):
+class Supplier(ModelBase, AuditMixin):
     """
     Stores supplier's legal/group information.
     """
@@ -51,15 +40,11 @@ class Supplier(ModelBase):
     name = db.Column(db.String(255), nullable=False)
     supplier_type = db.Column(db.String(50)) # e.g., 'Manufacturer', 'Distributor'
 
-    # Audit Fields
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
 
 
-class SupplierLocation(ModelBase):
+
+class SupplierLocation(ModelBase, AuditMixin):
     """
     Stores supplier's physical shipping/service locations.
     """
@@ -72,18 +57,13 @@ class SupplierLocation(ModelBase):
     phone = db.Column(db.String(50))
     is_default = db.Column(db.Boolean, nullable=False, default=False)
     
-    # Audit Fields
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
 
 # =============================================
 # Item & Resource Domain
 # =============================================
 
-class Product(ModelBase):
+class Product(ModelBase, AuditMixin):
     """
     Defines a product required by a customer. This is the root for a routing.
     """
@@ -95,13 +75,8 @@ class Product(ModelBase):
     description = db.Column(db.String(500))    
     end_cust_id = db.Column(db.Integer, db.ForeignKey('gj_customers.id'), nullable=True)
 
-    # Audit Fields
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-class InternalProduct(ModelBase):
+class InternalProduct(ModelBase, AuditMixin):
     """
     Defines a product within the company, linking it to a customer's product.
     """
@@ -112,13 +87,8 @@ class InternalProduct(ModelBase):
     description = db.Column(db.String(500))
     is_active = db.Column(db.Boolean, nullable=False, default=True)
 
-    # Audit Fields
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-class Material(ModelBase):
+class Material(ModelBase, AuditMixin):
     """
     Master data for all items (raw, semi-finished, finished goods).
     """
@@ -132,14 +102,9 @@ class Material(ModelBase):
     width = db.Column(db.Numeric(10, 4))
     thickness = db.Column(db.Numeric(10, 4))
 
-    # Audit Fields
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
 
-class Operation(ModelBase):
+class Operation(ModelBase, AuditMixin):
     """
     Standard, reusable manufacturing operations.
     """
@@ -148,13 +113,8 @@ class Operation(ModelBase):
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(500))
 
-    # Audit Fields
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-class Asset(ModelBase):
+class Asset(ModelBase, AuditMixin):
     """
     Master data for physical assets (equipment, tools, etc.).
     """
@@ -169,15 +129,9 @@ class Asset(ModelBase):
     install_date = db.Column(db.Date)
     asset_status = db.Column(db.String(50), nullable=False, default='Active')
 
-    # Audit Fields
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
 
-
-class AssetGroup(ModelBase):
+class AssetGroup(ModelBase, AuditMixin):
     """
     A logical grouping of assets (e.g., a production line).
     """
@@ -187,13 +141,8 @@ class AssetGroup(ModelBase):
     group_status = db.Column(db.String(50), nullable=False, default='Active')
     description = db.Column(db.String(500))
 
-    # Audit Fields
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-class WorkCenter(ModelBase):
+class WorkCenter(ModelBase, AuditMixin):
     """
     A logical scheduling unit for capacity planning.
     """
@@ -204,11 +153,6 @@ class WorkCenter(ModelBase):
     daily_avail_sec = db.Column(db.Integer, nullable=False)
     oee_pct = db.Column(db.Numeric(5, 4), nullable=False)
 
-    # Audit Fields
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
 
 # --- Association Table for Work Centers and Assets ---
@@ -221,7 +165,7 @@ work_center_assets = db.Table('gj_work_center_assets',
 )
 
 # --- RENAMED: This class now correctly represents the 'material_suppliers' table ---
-class MaterialSupplier(ModelBase):
+class MaterialSupplier(ModelBase, AuditMixin):
     """
     Association object linking a Material to a SupplierLocation.
     This corresponds to the 'material_suppliers' table in the design doc.
@@ -240,18 +184,13 @@ class MaterialSupplier(ModelBase):
     min_order_qty = db.Column(db.Numeric(12, 4))  # Minimum order quantity (MOQ)
     currency = db.Column(db.String(3), default='USD')  # Currency code for pricing
 
-    # Audit Fields
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
     # Unique constraint to prevent duplicate entries for the same material-supplier pair
     __table_args__ = (db.UniqueConstraint('material_id', 'sup_loc_id', name='uq_material_supplier_loc'),)
 
 
 # --- ADDED: The missing 'supplier_relationships' model ---
-class SupplierRelationship(ModelBase):
+class SupplierRelationship(ModelBase, AuditMixin):
     """
     Defines relationships between suppliers (e.g., agent, parent company).
     This corresponds to the 'supplier_relationships' table in the design doc.
@@ -263,6 +202,4 @@ class SupplierRelationship(ModelBase):
     mfg_id = db.Column(db.Integer, db.ForeignKey('gj_suppliers.id'), nullable=False)
     relation_type = db.Column(db.String(50), nullable=False) # e.g., 'Agent', 'Group Member'
 
-    # Audit Fields
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
+

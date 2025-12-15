@@ -1,9 +1,9 @@
 # goji/app/organization/models.py
 from ..extensions import db
-from ..models import ModelBase
+from ..models import ModelBase, AuditMixin
 from datetime import datetime
 
-class BusinessUnit(ModelBase):
+class BusinessUnit(ModelBase, AuditMixin):
     """
     Defines the highest-level business units in the company.
     """
@@ -11,15 +11,10 @@ class BusinessUnit(ModelBase):
     name = db.Column(db.String(100), nullable=False, unique=True)
     description = db.Column(db.String(500))
 
-    # Audit Fields
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
 
 
-class LegalEntity(ModelBase):
+class LegalEntity(ModelBase, AuditMixin):
     """
     Stores information for all independent legal entities.
     """
@@ -29,13 +24,8 @@ class LegalEntity(ModelBase):
     address = db.Column(db.String(500))
     legal_rep = db.Column(db.String(100))
 
-    # Audit Fields
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
-class FactoryCluster(ModelBase):
+class FactoryCluster(ModelBase, AuditMixin):
     """
     Defines a cluster of factories, linked to a BU and a Legal Entity.
     """
@@ -44,15 +34,9 @@ class FactoryCluster(ModelBase):
     legal_entity_id = db.Column(db.Integer, db.ForeignKey('gj_legal_entities.id'), nullable=False)
     name = db.Column(db.String(100), nullable=False, unique=True)
 
-    # Audit Fields
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
 
-
-class Plant(ModelBase):
+class Plant(ModelBase, AuditMixin):
     """
     Defines a specific manufacturing plant or facility.
     """
@@ -61,8 +45,3 @@ class Plant(ModelBase):
     name = db.Column(db.String(100), nullable=False)
     address = db.Column(db.String(500))
 
-    # Audit Fields
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))

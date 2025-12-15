@@ -1,9 +1,9 @@
 # goji/app/demand/models.py
 from ..extensions import db
-from ..models import ModelBase
+from ..models import ModelBase, AuditMixin
 from datetime import datetime
 
-class SalesOrder(ModelBase):
+class SalesOrder(ModelBase, AuditMixin):
     """Master record for a sales order."""
     id = db.Column(db.Integer, primary_key=True)
     order_num = db.Column(db.String(50), nullable=False, unique=True)
@@ -12,13 +12,9 @@ class SalesOrder(ModelBase):
     order_date = db.Column(db.Date, nullable=False)
     order_status = db.Column(db.String(50), nullable=False, default='Confirmed')
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
 
-class SalesOrderLine(ModelBase):
+class SalesOrderLine(ModelBase, AuditMixin):
     """A single line item on a Sales Order."""
     id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(db.Integer, db.ForeignKey('gj_sales_orders.id'), nullable=False)
@@ -29,13 +25,9 @@ class SalesOrderLine(ModelBase):
     req_ship_date = db.Column(db.Date)
     promised_ship_date = db.Column(db.Date)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
 
-class ForecastSet(ModelBase):
+class ForecastSet(ModelBase, AuditMixin):
     """A set of forecasts, typically from a customer."""
     id = db.Column(db.Integer, primary_key=True)
     cust_id = db.Column(db.Integer, db.ForeignKey('gj_customers.id'), nullable=True)
@@ -44,22 +36,12 @@ class ForecastSet(ModelBase):
     period_type = db.Column(db.String(20), nullable=False) # e.g., 'Weekly', 'Monthly'
     set_status = db.Column(db.String(20), nullable=False, default='Active')
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
 
-class ForecastLine(ModelBase):
+class ForecastLine(ModelBase, AuditMixin):
     """A single line item in a Forecast Set."""
     id = db.Column(db.Integer, primary_key=True)
     set_id = db.Column(db.Integer, db.ForeignKey('gj_forecast_sets.id'), nullable=False)
     product_id = db.Column(db.Integer, db.ForeignKey('gj_products.id'), nullable=False)
     period_start_date = db.Column(db.Date, nullable=False)
     quantity = db.Column(db.Numeric(12, 4), nullable=False)
-
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-

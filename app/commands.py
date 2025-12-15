@@ -235,7 +235,7 @@ def seed_data_command():
     db.session.add([location_byd_sz, location_quanta_cq])
     db.session.commit()
 
-    # # HDI PCB Product
+    # HDI PCB Product
     product_820_03902_A = Product(cust_id=customer_apple.id, end_cust_id = customer_apple.id, cust_part_num='820-03902-A',
                               description='3阶10层板', created_by_id=admin_user.id, updated_by_id=admin_user.id)
     

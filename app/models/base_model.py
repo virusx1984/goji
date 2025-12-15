@@ -1,13 +1,16 @@
 # goji/app/models/base_model.py
 import re
 from ..extensions import db
+from datetime import datetime
 from sqlalchemy.ext.declarative import declared_attr
 
 # Define a dictionary to hardcode special pluralization rules.
 # Key: Model class name in CamelCase.
 # Value: Desired plural table name in snake_case (without the 'gj_' prefix).
 SPECIAL_PLURALS = {
-    'LegalEntity': 'legal_entities'
+    'LegalEntity': 'legal_entities',
+    'FactoryCluster': 'factory_clusters',
+    'ProcessCategory': 'process_categories'
     # Add more exceptions here in the future as needed, for example:
     # 'Company': 'companies',
     # 'Person': 'people'
@@ -39,3 +42,25 @@ class ModelBase(db.Model):
             plural_snake_case_name = f"{snake_case_name}s"
         
         return f"gj_{plural_snake_case_name}"
+    
+class TimestampMixin:
+    """
+    Mixin that adds created_at and updated_at timestamps.
+    Useful for tables like User/Role where 'created_by' might be redundant or circular.
+    """
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+class AuditMixin(TimestampMixin):
+    """
+    Mixin that adds audit traceability fields (who created/updated it).
+    Inherits created_at and updated_at from TimestampMixin.
+    """
+    @declared_attr
+    def created_by_id(cls):
+        # Use string reference 'gj_users.id' to avoid circular imports
+        return db.Column(db.Integer, db.ForeignKey('gj_users.id'))
+
+    @declared_attr
+    def updated_by_id(cls):
+        return db.Column(db.Integer, db.ForeignKey('gj_users.id'))

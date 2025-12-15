@@ -1,9 +1,9 @@
 # goji/app/process/models.py
 from ..extensions import db
-from ..models import ModelBase
+from ..models import ModelBase, AuditMixin
 from datetime import datetime
 
-class Routing(ModelBase):
+class Routing(ModelBase, AuditMixin):
     """Defines the master record for a manufacturing process of a product."""
     id = db.Column(db.Integer, primary_key=True)
     routing_status = db.Column(db.String(50), nullable=False, default='ACTIVE') # e.g., 'PLANNING', 'ACTIVE'
@@ -13,14 +13,9 @@ class Routing(ModelBase):
     strip_per_panel = db.Column(db.Integer)
     is_default = db.Column(db.Boolean, nullable=False, default=False)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
-
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
     
     
-class RoutingOperation(ModelBase):
+class RoutingOperation(ModelBase, AuditMixin):
     """Defines a single step in a Routing."""
     id = db.Column(db.Integer, primary_key=True)
     routing_id = db.Column(db.Integer, db.ForeignKey('gj_routings.id'), nullable=False)
@@ -33,25 +28,15 @@ class RoutingOperation(ModelBase):
     workpiece_len = db.Column(db.Numeric(10, 4))
     workpiece_width = db.Column(db.Numeric(10, 4))
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-
     
-class LayerDefinition(ModelBase):
+class LayerDefinition(ModelBase, AuditMixin):
     """Master data for layer definitions (e.g., in PCB manufacturing)."""
     id = db.Column(db.Integer, primary_key=True)
     layer_code = db.Column(db.String(50), nullable=False, unique=True, index=True)
     layer_name = db.Column(db.String(100))
     description = db.Column(db.String(500))
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-
-class LayerStructure(ModelBase):
+class LayerStructure(ModelBase, AuditMixin):
     """Defines the hierarchical structure of layers for a product."""
     id = db.Column(db.Integer, primary_key=True)
     routing_id  = db.Column(db.Integer, db.ForeignKey('gj_routings.id'), nullable=False)
@@ -60,11 +45,8 @@ class LayerStructure(ModelBase):
     is_primary_branch = db.Column(db.Boolean, nullable=False, default=False)
     hierarchy_level = db.Column(db.Integer, nullable=False)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-
     
-class OperationResource(ModelBase):
+class OperationResource(ModelBase, AuditMixin):
     """Links a routing operation to a work center with specific time standards."""
     id = db.Column(db.Integer, primary_key=True)
     routing_op_id = db.Column(db.Integer, db.ForeignKey('gj_routing_operations.id'), nullable=False)
@@ -81,16 +63,10 @@ class OperationResource(ModelBase):
     
     pref_level = db.Column(db.Integer, nullable=False, default=1)  # Priority level (1=preferred)
     is_active = db.Column(db.Boolean, nullable=False, default=True)  # Whether this resource option is active
-
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-
    
 
 
-class BomItem(ModelBase):
+class BomItem(ModelBase, AuditMixin):
     """Defines a single material requirement for a routing operation."""
     id = db.Column(db.Integer, primary_key=True)
     routing_op_id = db.Column(db.Integer, db.ForeignKey('gj_routing_operations.id'), nullable=False)
@@ -106,20 +82,13 @@ class BomItem(ModelBase):
     
     notes = db.Column(db.String(500))
     
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-    updated_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
-
     
-class AlternateMaterial(ModelBase):
+class AlternateMaterial(ModelBase, AuditMixin):
     """Defines an alternative material for a BomItem."""
     id = db.Column(db.Integer, primary_key=True)
     bom_item_id = db.Column(db.Integer, db.ForeignKey('gj_bom_items.id'), nullable=False)
     alt_material_id = db.Column(db.Integer, db.ForeignKey('gj_materials.id'), nullable=False)
     priority = db.Column(db.Integer, nullable=False, default=99)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    created_by_id = db.Column(db.Integer, db.ForeignKey('gj_users.id'))
 
     

@@ -46,8 +46,8 @@ def create_app(config_name='development'):
 
     # --- Step 2: Initialize Extensions ---
     # Pass the fully configured app object to each extension's init_app method.
-    # db.init_app(app)
-    # migrate.init_app(app, db)
+    db.init_app(app)
+    migrate.init_app(app, db)
     bcrypt.init_app(app)
     jwt.init_app(app)
     cors.init_app(app, resources={r"/api/*": {"origins": "*"}})
