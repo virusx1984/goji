@@ -4,7 +4,7 @@
 # It's also a good place to import all your models so they can be
 # easily discovered by Flask-Migrate.
 
-from .base_model import ModelBase
+from .base_model import ModelBase, TimestampMixin, AuditMixin
 
 from ..organization.models import *
 from ..user_management.models import *
