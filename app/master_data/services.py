@@ -3,27 +3,31 @@
 from ..extensions import db
 from .models import (
     Customer, CustomerLocation, Supplier, SupplierLocation,
-    Product, Material, WorkCenter, Operation
+    Product, InternalProduct, Material, WorkCenter, Operation,
+    Asset, AssetGroup
 )
 from .schemas import (
-    CustomerSchema, SupplierSchema, ProductSchema, 
-    MaterialSchema, WorkCenterSchema, OperationSchema
+    CustomerSchema, SupplierSchema, ProductSchema, InternalProductSchema,
+    MaterialSchema, WorkCenterSchema, OperationSchema,
+    AssetSchema, AssetGroupSchema
 )
 from marshmallow import ValidationError
 
 class MasterDataService:
     """
-    Encapsulates business logic for Master Data entities including
-    Partners (Customers/Suppliers), Items (Products/Materials), and Resources.
+    Encapsulates business logic for Master Data entities.
     """
 
     def __init__(self):
         self.customer_schema = CustomerSchema()
         self.supplier_schema = SupplierSchema()
         self.product_schema = ProductSchema()
+        self.internal_product_schema = InternalProductSchema()
         self.material_schema = MaterialSchema()
         self.work_center_schema = WorkCenterSchema()
         self.operation_schema = OperationSchema()
+        self.asset_schema = AssetSchema()
+        self.asset_group_schema = AssetGroupSchema()
 
     # =========================================================
     # Customer Logic
@@ -121,12 +125,33 @@ class MasterDataService:
             db.session.rollback()
             raise e
 
+    # --- Internal Product (Added) ---
+
+    def get_all_internal_products(self):
+        return InternalProduct.query.all()
+
+    def create_internal_product(self, data: dict) -> InternalProduct:
+        try:
+            new_ip = self.internal_product_schema.load(data)
+            db.session.add(new_ip)
+            db.session.commit()
+            return new_ip
+        except ValidationError as err:
+            raise err
+        except Exception as e:
+            db.session.rollback()
+            raise e
+
     # =========================================================
-    # Resource Logic (WorkCenters, Operations)
+    # Resource Logic (WorkCenters, Operations, Assets)
     # =========================================================
 
+    # --- Work Center ---
     def get_all_work_centers(self):
         return WorkCenter.query.all()
+
+    def get_work_center_by_id(self, id):
+        return WorkCenter.query.get_or_404(id)
 
     def create_work_center(self, data: dict) -> WorkCenter:
         try:
@@ -134,6 +159,54 @@ class MasterDataService:
             db.session.add(new_wc)
             db.session.commit()
             return new_wc
+        except ValidationError as err:
+            raise err
+        except Exception as e:
+            db.session.rollback()
+            raise e
+
+    # --- Operation ---
+    def get_all_operations(self):
+        return Operation.query.all()
+
+    def create_operation(self, data: dict) -> Operation:
+        try:
+            new_op = self.operation_schema.load(data)
+            db.session.add(new_op)
+            db.session.commit()
+            return new_op
+        except ValidationError as err:
+            raise err
+        except Exception as e:
+            db.session.rollback()
+            raise e
+
+    # --- Asset ---
+    def get_all_assets(self):
+        return Asset.query.all()
+
+    def create_asset(self, data: dict) -> Asset:
+        try:
+            new_asset = self.asset_schema.load(data)
+            db.session.add(new_asset)
+            db.session.commit()
+            return new_asset
+        except ValidationError as err:
+            raise err
+        except Exception as e:
+            db.session.rollback()
+            raise e
+
+    # --- Asset Group ---
+    def get_all_asset_groups(self):
+        return AssetGroup.query.all()
+
+    def create_asset_group(self, data: dict) -> AssetGroup:
+        try:
+            new_group = self.asset_group_schema.load(data)
+            db.session.add(new_group)
+            db.session.commit()
+            return new_group
         except ValidationError as err:
             raise err
         except Exception as e:

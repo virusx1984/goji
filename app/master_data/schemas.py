@@ -6,6 +6,7 @@ from .models import (
     Supplier,
     SupplierLocation,
     Product,
+    InternalProduct,
     Material,
     Operation,
     Asset,
@@ -137,3 +138,10 @@ class PlantSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Plant
         load_instance = True
+
+class InternalProductSchema(ma.SQLAlchemyAutoSchema):
+    """Schema for InternalProduct."""
+    class Meta:
+        model = InternalProduct
+        load_instance = True
+        include_relationships = True
